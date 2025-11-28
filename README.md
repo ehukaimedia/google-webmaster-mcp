@@ -98,6 +98,39 @@ To use this with an MCP client, configure it to run the built Node.js script:
 }
 ```
 
+### Using in Other Projects (Global Usage)
+
+Since this is an MCP server, you don't install it *into* other repositories. Instead, you configure your AI client (Cursor, Claude Desktop, etc.) to connect to this server. Once connected, the tools are available globally, regardless of which project you have open.
+
+#### Cursor Configuration
+1.  Open Cursor Settings.
+2.  Go to **Features** > **MCP**.
+3.  Click **+ Add New MCP Server**.
+4.  Enter the following:
+    -   **Name**: `google-webmaster`
+    -   **Type**: `command`
+    -   **Command**: `node /absolute/path/to/google-webmaster-mcp/dist/index.js` (Replace with your actual path)
+    -   **Environment Variables**: (Optional, if not set in `.env` or if you prefer explicit config)
+        -   `GOOGLE_CLIENT_ID`: `...`
+        -   `GOOGLE_CLIENT_SECRET`: `...`
+
+#### Claude Desktop Configuration
+Edit your `claude_desktop_config.json`:
+```json
+{
+  "mcpServers": {
+    "google-webmaster": {
+      "command": "node",
+      "args": ["/absolute/path/to/google-webmaster-mcp/dist/index.js"],
+      "env": {
+        "GOOGLE_CLIENT_ID": "...",
+        "GOOGLE_CLIENT_SECRET": "..."
+      }
+    }
+  }
+}
+```
+
 ### Available Tools
 
 #### GTM Tools
