@@ -1,0 +1,14 @@
+{
+    "mcpServers": {
+        "google-webmaster": {
+            "command": "node",
+            "args": [
+                "/Volumes/Extreme SSD/AI-Applications/Google-Webmaster-MCP/dist/index.js"
+            ],
+            "env": {
+                "GOOGLE_CLIENT_ID": "YOUR_CLIENT_ID",
+                "GOOGLE_CLIENT_SECRET": "YOUR_CLIENT_SECRET"
+            }
+        }
+    }
+}
