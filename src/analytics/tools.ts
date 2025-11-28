@@ -43,6 +43,17 @@ export const ANALYTICS_TOOLS: Tool[] = [
             required: ['propertyId', 'startDate', 'endDate'],
         },
     },
+    {
+        name: 'analytics_get_metadata',
+        description: 'Get available dimensions and metrics for a GA4 property.',
+        inputSchema: {
+            type: 'object',
+            properties: {
+                propertyId: { type: 'string', description: 'GA4 Property ID' },
+            },
+            required: ['propertyId'],
+        },
+    },
 ];
 
 export async function handleAnalyticsTool(name: string, args: any) {
@@ -53,6 +64,13 @@ export async function handleAnalyticsTool(name: string, args: any) {
             const summaries = await client.listAccountSummaries();
             return {
                 content: [{ type: 'text', text: JSON.stringify(summaries, null, 2) }],
+            };
+        }
+
+        case 'analytics_get_metadata': {
+            const metadata = await client.getMetadata(args.propertyId);
+            return {
+                content: [{ type: 'text', text: JSON.stringify(metadata, null, 2) }],
             };
         }
 

@@ -39,6 +39,32 @@ export class GSCClient {
         return res.data.rows || [];
     }
 
+    async getPerformanceOverview(siteUrl: string, days: number = 30) {
+        const endDate = new Date().toISOString().split('T')[0];
+        const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+        const [overview, topPages] = await Promise.all([
+            this.queryAnalytics(siteUrl, startDate, endDate, ['date']),
+            this.queryAnalytics(siteUrl, startDate, endDate, ['page'], 5)
+        ]);
+
+        const totalClicks = overview.reduce((sum, row) => sum + (row.clicks || 0), 0);
+        const totalImpressions = overview.reduce((sum, row) => sum + (row.impressions || 0), 0);
+        const avgCtr = totalImpressions > 0 ? (totalClicks / totalImpressions) * 100 : 0;
+
+        return {
+            period: `${days} days (${startDate} to ${endDate})`,
+            totalClicks,
+            totalImpressions,
+            avgCtr: avgCtr.toFixed(2) + '%',
+            topPages: topPages.map(p => ({
+                page: p.keys?.[0],
+                clicks: p.clicks,
+                impressions: p.impressions
+            }))
+        };
+    }
+
     async inspectUrl(siteUrl: string, inspectionUrl: string, languageCode: string = 'en-US') {
         const res = await this.searchConsole.urlInspection.index.inspect({
             requestBody: {

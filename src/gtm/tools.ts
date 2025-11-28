@@ -36,6 +36,10 @@ export const GTM_TOOLS: Tool[] = [
                     description: 'Trigger type (default: pageview)',
                     default: 'pageview',
                 },
+                triggerName: {
+                    type: 'string',
+                    description: 'Name of the trigger to use or create (Smart Resolution)',
+                },
             },
             required: ['name', 'html'],
         },
@@ -280,7 +284,7 @@ export async function handleGtmTool(name: string, args: any) {
         }
 
         case 'gtm_create_tag': {
-            const tag = await gtmManager.createTag(args.name, args.html, args.trigger);
+            const tag = await gtmManager.createTag(args.name, args.html, args.trigger, args.triggerName);
             return {
                 content: [
                     {

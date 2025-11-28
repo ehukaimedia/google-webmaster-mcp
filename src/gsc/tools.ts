@@ -85,6 +85,18 @@ export const GSC_TOOLS: Tool[] = [
             required: ['sitemapUrl'],
         },
     },
+    {
+        name: 'gsc_get_performance_overview',
+        description: 'Get a quick performance overview (clicks, impressions, top pages) for a specific period.',
+        inputSchema: {
+            type: 'object',
+            properties: {
+                siteUrl: { type: 'string', description: 'The URL of the property.' },
+                days: { type: 'number', description: 'Number of days to look back (default: 30).' },
+            },
+            required: ['siteUrl'],
+        },
+    },
 ];
 
 export async function handleGscTool(name: string, args: any) {
@@ -128,6 +140,13 @@ export async function handleGscTool(name: string, args: any) {
         case 'gsc_sitemap_extract_urls': {
             const { sitemapUrl } = args;
             const result = await client.fetchSitemapUrls(sitemapUrl);
+            return {
+                content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+            };
+        }
+        case 'gsc_get_performance_overview': {
+            const { siteUrl, days } = args;
+            const result = await client.getPerformanceOverview(siteUrl, days);
             return {
                 content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
             };

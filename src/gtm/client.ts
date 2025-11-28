@@ -105,7 +105,7 @@ export class GTMManager {
         return triggers.data.trigger || [];
     }
 
-    async createTag(name: string, html: string, triggerType: string = 'pageview') {
+    async createTag(name: string, html: string, triggerType: string = 'pageview', triggerName?: string) {
         if (!this.accountId || !this.containerId) {
             if (!process.env.GTM_ID) throw new Error('GTM_ID environment variable not set');
             await this.findContainer(process.env.GTM_ID);
@@ -138,6 +138,33 @@ export class GTMManager {
                 triggerId = newTrigger.data.triggerId;
             } else {
                 triggerId = allPagesTrigger.triggerId;
+            }
+        } else if (triggerName) {
+            // Smart Trigger Resolution
+            const triggers = await this.tagManager.accounts.containers.workspaces.triggers.list({
+                parent: `accounts/${this.accountId}/containers/${this.containerId}/workspaces/${workspace.workspaceId}`
+            });
+
+            const existingTrigger = triggers.data.trigger?.find((t: any) => t.name === triggerName);
+
+            if (existingTrigger) {
+                triggerId = existingTrigger.triggerId;
+            } else {
+                const newTrigger = await this.tagManager.accounts.containers.workspaces.triggers.create({
+                    parent: `accounts/${this.accountId}/containers/${this.containerId}/workspaces/${workspace.workspaceId}`,
+                    requestBody: {
+                        name: triggerName,
+                        type: 'customEvent',
+                        customEventFilter: [{
+                            type: 'equals',
+                            parameter: [
+                                { type: 'template', key: 'arg0', value: '{{_event}}' },
+                                { type: 'template', key: 'arg1', value: triggerName }
+                            ]
+                        }]
+                    }
+                });
+                triggerId = newTrigger.data.triggerId;
             }
         }
 

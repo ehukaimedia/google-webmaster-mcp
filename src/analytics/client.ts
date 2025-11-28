@@ -38,4 +38,10 @@ export class AnalyticsClient {
         });
         return res.data;
     }
+    async getMetadata(propertyId: string) {
+        const res = await this.dataClient.properties.getMetadata({
+            name: `properties/${propertyId}/metadata`
+        });
+        return res.data;
+    }
 }

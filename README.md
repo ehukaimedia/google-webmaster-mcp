@@ -191,7 +191,7 @@ If you were previously using `gtm-manager-mcp` or `gsc-manager-mcp`, you should:
 
 #### GTM Tools
 - **Discovery**: `gtm_list_accounts`, `gtm_list_containers`, `gtm_list_workspaces`
-- **Tags**: `gtm_list_tags`, `gtm_create_tag`, `gtm_update_tag`, `gtm_delete_tag`
+- **Tags**: `gtm_list_tags`, `gtm_create_tag` (supports Smart Trigger Resolution), `gtm_update_tag`, `gtm_delete_tag`
 - **GA4 Helpers**: `gtm_create_ga4_event_tag`, `gtm_create_ga4_configuration_tag`
 - **Variables**: `gtm_list_variables`, `gtm_create_variable`, `gtm_delete_variable`
 - **Triggers**: `gtm_list_triggers`, `gtm_create_trigger`
@@ -200,12 +200,14 @@ If you were previously using `gtm-manager-mcp` or `gsc-manager-mcp`, you should:
 
 #### GSC Tools
 - `gsc_list_sites`
+- `gsc_get_performance_overview` (Quick Look)
 - `gsc_analytics_query`
 - `gsc_inspect_url`
 - `gsc_sitemaps_submit`, `gsc_list_sitemaps`
 
 #### Analytics Tools
 - `analytics_list_account_summaries`
+- `analytics_get_metadata` (List Dimensions/Metrics)
 - `analytics_run_report`
 
 ## Development
