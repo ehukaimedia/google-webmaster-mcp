@@ -3,7 +3,6 @@ dist/
 .env
 *.log
 .DS_Store
-gtm-manager-mcp/
-gsc-manager-mcp/
+
 ._*
 token.json
