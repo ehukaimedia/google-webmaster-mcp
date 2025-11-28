@@ -41,6 +41,31 @@ export const GTM_TOOLS: Tool[] = [
         },
     },
     {
+        name: 'gtm_update_tag',
+        description: 'Update an existing HTML tag in GTM',
+        inputSchema: {
+            type: 'object',
+            properties: {
+                tagId: { type: 'string', description: 'Tag ID to update' },
+                name: { type: 'string', description: 'Tag name' },
+                html: { type: 'string', description: 'HTML/JavaScript code for the tag' },
+                trigger: { type: 'string', description: 'Trigger type (default: pageview)', default: 'pageview' },
+            },
+            required: ['tagId', 'name', 'html'],
+        },
+    },
+    {
+        name: 'gtm_delete_tag',
+        description: 'Delete a tag from GTM',
+        inputSchema: {
+            type: 'object',
+            properties: {
+                tagId: { type: 'string', description: 'Tag ID to delete' },
+            },
+            required: ['tagId'],
+        },
+    },
+    {
         name: 'gtm_list_variables',
         description: 'List all variables in the GTM container',
         inputSchema: {
@@ -101,6 +126,30 @@ export async function handleGtmTool(name: string, args: any) {
                     {
                         type: 'text',
                         text: `Created tag: ${tag.name} (ID: ${tag.tagId})`,
+                    },
+                ],
+            };
+        }
+
+        case 'gtm_update_tag': {
+            const tag = await gtmManager.updateTag(args.tagId, args.name, args.html, args.trigger);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: `Updated tag: ${tag.name} (ID: ${tag.tagId})`,
+                    },
+                ],
+            };
+        }
+
+        case 'gtm_delete_tag': {
+            await gtmManager.deleteTag(args.tagId);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: `Deleted tag: ${args.tagId}`,
                     },
                 ],
             };

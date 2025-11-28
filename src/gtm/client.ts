@@ -198,4 +198,78 @@ export class GTMManager {
         });
         return resp.data;
     }
+    async updateTag(tagId: string, name: string, html: string, triggerType: string = 'pageview') {
+        if (!this.accountId || !this.containerId) {
+            if (!process.env.GTM_ID) throw new Error('GTM_ID environment variable not set');
+            await this.findContainer(process.env.GTM_ID);
+        }
+
+        const workspaces = await this.tagManager.accounts.containers.workspaces.list({
+            parent: `accounts/${this.accountId}/containers/${this.containerId}`
+        });
+
+        const workspace = workspaces.data.workspace?.[0];
+        if (!workspace) throw new Error('No workspace found');
+
+        // Create trigger if needed
+        let triggerId;
+        if (triggerType === 'pageview') {
+            const triggers = await this.tagManager.accounts.containers.workspaces.triggers.list({
+                parent: `accounts/${this.accountId}/containers/${this.containerId}/workspaces/${workspace.workspaceId}`
+            });
+
+            let allPagesTrigger = triggers.data.trigger?.find((t: any) => t.type === 'pageview');
+
+            if (!allPagesTrigger) {
+                const newTrigger = await this.tagManager.accounts.containers.workspaces.triggers.create({
+                    parent: `accounts/${this.accountId}/containers/${this.containerId}/workspaces/${workspace.workspaceId}`,
+                    requestBody: {
+                        name: 'All Pages',
+                        type: 'pageview'
+                    }
+                });
+                triggerId = newTrigger.data.triggerId;
+            } else {
+                triggerId = allPagesTrigger.triggerId;
+            }
+        }
+
+        const tag = await this.tagManager.accounts.containers.workspaces.tags.update({
+            path: `accounts/${this.accountId}/containers/${this.containerId}/workspaces/${workspace.workspaceId}/tags/${tagId}`,
+            requestBody: {
+                name,
+                type: 'html',
+                parameter: [
+                    {
+                        type: 'template',
+                        key: 'html',
+                        value: html
+                    }
+                ],
+                firingTriggerId: triggerId ? [triggerId] : undefined
+            }
+        });
+
+        return tag.data;
+    }
+
+    async deleteTag(tagId: string) {
+        if (!this.accountId || !this.containerId) {
+            if (!process.env.GTM_ID) throw new Error('GTM_ID environment variable not set');
+            await this.findContainer(process.env.GTM_ID);
+        }
+
+        const workspaces = await this.tagManager.accounts.containers.workspaces.list({
+            parent: `accounts/${this.accountId}/containers/${this.containerId}`
+        });
+
+        const workspace = workspaces.data.workspace?.[0];
+        if (!workspace) throw new Error('No workspace found');
+
+        await this.tagManager.accounts.containers.workspaces.tags.delete({
+            path: `accounts/${this.accountId}/containers/${this.containerId}/workspaces/${workspace.workspaceId}/tags/${tagId}`
+        });
+
+        return { success: true, message: `Tag ${tagId} deleted` };
+    }
 }

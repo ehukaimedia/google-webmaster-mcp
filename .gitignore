@@ -1,4 +1,5 @@
 node_modules/
+gtm-manager-mcp/
 dist/
 .env
 *.log
