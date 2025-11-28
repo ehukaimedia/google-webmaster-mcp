@@ -190,12 +190,13 @@ If you were previously using `gtm-manager-mcp` or `gsc-manager-mcp`, you should:
 ### Available Tools
 
 #### GTM Tools
-- `gtm_list_tags`, `gtm_find_tags`
-- `gtm_create_tag`, `gtm_update_tag`, `gtm_delete_tag`
-- `gtm_create_ga4_event`, `gtm_create_ga4_configuration`
-- `gtm_list_variables`, `gtm_create_variable`
-- `gtm_list_triggers`, `gtm_create_trigger`
-- `gtm_create_version`, `gtm_publish_version`
+- **Discovery**: `gtm_list_accounts`, `gtm_list_containers`, `gtm_list_workspaces`
+- **Tags**: `gtm_list_tags`, `gtm_create_tag`, `gtm_update_tag`, `gtm_delete_tag`
+- **GA4 Helpers**: `gtm_create_ga4_event_tag`, `gtm_create_ga4_configuration_tag`
+- **Variables**: `gtm_list_variables`, `gtm_create_variable`, `gtm_delete_variable`
+- **Triggers**: `gtm_list_triggers`, `gtm_create_trigger`
+- **Versions**: `gtm_list_versions`, `gtm_create_version`, `gtm_publish_version`
+- **Validation**: `gtm_validate_workspace`
 
 #### GSC Tools
 - `gsc_list_sites`
