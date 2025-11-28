@@ -4,8 +4,21 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { SCOPES, REDIRECT_URI } from './config.js';
 import 'dotenv/config';
+import * as dotenv from 'dotenv';
 
-const TOKEN_PATH = path.join(process.cwd(), 'token.json');
+import * as os from 'os';
+
+const CONFIG_DIR = path.join(os.homedir(), '.config', 'google-webmaster-mcp');
+if (!fs.existsSync(CONFIG_DIR)) {
+    fs.mkdirSync(CONFIG_DIR, { recursive: true });
+}
+
+// Load .env from config dir if it exists
+const globalEnvPath = path.join(CONFIG_DIR, '.env');
+if (fs.existsSync(globalEnvPath)) {
+    dotenv.config({ path: globalEnvPath });
+}
+const TOKEN_PATH = path.join(CONFIG_DIR, 'token.json');
 
 export async function getAuthClient(): Promise<OAuth2Client> {
     const clientId = process.env.GOOGLE_CLIENT_ID;

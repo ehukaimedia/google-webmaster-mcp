@@ -98,6 +98,28 @@ To use this with an MCP client, configure it to run the built Node.js script:
 }
 ```
 
+### Global Installation (CLI)
+
+You can install this tool globally to use it as a command-line utility or to simplify the MCP configuration path.
+
+1.  **Install Globally**:
+    ```bash
+    npm install -g .
+    # Or from git:
+    npm install -g git+https://github.com/ehukaimedia/google-webmasters-mcp.git
+    ```
+
+2.  **Configuration**:
+    The tool stores its configuration (tokens) in `~/.config/google-webmaster-mcp/`.
+    You can also place a `.env` file in that directory with your `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`.
+
+3.  **Authenticate**:
+    Run the auth command from anywhere:
+    ```bash
+    google-webmaster-mcp-auth
+    ```
+    (This command is available globally if you installed via `npm install -g`)
+
 ### Using in Other Projects (Global Usage)
 
 Since this is an MCP server, you don't install it *into* other repositories. Instead, you configure your AI client (Cursor, Claude Desktop, etc.) to connect to this server. Once connected, the tools are available globally, regardless of which project you have open.
@@ -130,6 +152,26 @@ Edit your `claude_desktop_config.json`:
   }
 }
 ```
+
+### Multi-Repository Workflow
+
+This tool is designed to work seamlessly across multiple projects without reconfiguration.
+
+1.  **Global Auth**: You authenticate once (globally).
+2.  **Local Context**: In each of your project repositories, create a `.env` file (or just have the info in your README) with the specific IDs for that project.
+
+**Example Project `.env`:**
+```env
+GTM_ID=GTM-ABC1234
+GSC_SITE=https://my-project.com
+GA4_PROPERTY_ID=987654321
+```
+
+**How it works**:
+When you ask your AI agent (Cursor/Claude) to "list tags" or "check indexing", the AI will:
+1.  Read the `GTM_ID` or `GSC_SITE` from your current project's files.
+2.  Pass that ID as an argument to the global MCP tool.
+3.  The MCP tool uses your global authentication to perform the action on that specific container/site.
 
 ### Available Tools
 

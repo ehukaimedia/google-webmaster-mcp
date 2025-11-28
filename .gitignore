@@ -6,3 +6,4 @@ dist/
 gtm-manager-mcp/
 gsc-manager-mcp/
 ._*
+token.json

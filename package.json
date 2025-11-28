@@ -3,13 +3,14 @@
   "version": "1.0.0",
   "type": "module",
   "bin": {
-    "google-webmaster-mcp": "./dist/index.js"
+    "google-webmaster-mcp": "./dist/index.js",
+    "google-webmaster-mcp-auth": "./dist/auth/cli.js"
   },
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
     "dev": "ts-node src/index.ts",
-    "auth": "ts-node src/auth/cli.ts",
+    "auth": "node dist/auth/cli.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
