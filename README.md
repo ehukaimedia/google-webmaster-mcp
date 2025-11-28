@@ -173,6 +173,20 @@ When you ask your AI agent (Cursor/Claude) to "list tags" or "check indexing", t
 2.  Pass that ID as an argument to the global MCP tool.
 3.  The MCP tool uses your global authentication to perform the action on that specific container/site.
 
+### Migrating from Legacy Tools
+
+If you were previously using `gtm-manager-mcp` or `gsc-manager-mcp`, you should:
+
+1.  **Update your MCP Configuration**:
+    Replace the separate configurations for GTM and GSC with the single `google-webmaster` configuration shown above.
+    *   Old tools: `gtm_list_tags`, `gsc_list_sites`, etc. are all now available under this one server.
+
+2.  **Uninstall Legacy Packages**:
+    If you installed the old tools globally, you can remove them to avoid confusion:
+    ```bash
+    npm uninstall -g gtm-manager-mcp gsc-manager-mcp
+    ```
+
 ### Available Tools
 
 #### GTM Tools
