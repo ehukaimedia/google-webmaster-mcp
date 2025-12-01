@@ -3,7 +3,6 @@ import { OAuth2Client } from 'google-auth-library';
 import * as fs from 'fs';
 import * as path from 'path';
 import { SCOPES, REDIRECT_URI } from './config.js';
-import 'dotenv/config';
 import * as dotenv from 'dotenv';
 
 import * as os from 'os';
@@ -13,10 +12,23 @@ if (!fs.existsSync(CONFIG_DIR)) {
     fs.mkdirSync(CONFIG_DIR, { recursive: true });
 }
 
+// Load .env files while silencing dotenv's stdout noise
+const withSilencedLogs = (fn: () => void) => {
+    const originalLog = console.log;
+    console.log = () => {};
+    try {
+        fn();
+    } finally {
+        console.log = originalLog;
+    }
+};
+
+withSilencedLogs(() => dotenv.config());
+
 // Load .env from config dir if it exists
 const globalEnvPath = path.join(CONFIG_DIR, '.env');
 if (fs.existsSync(globalEnvPath)) {
-    dotenv.config({ path: globalEnvPath });
+    withSilencedLogs(() => dotenv.config({ path: globalEnvPath }));
 }
 const TOKEN_PATH = path.join(CONFIG_DIR, 'token.json');
 
