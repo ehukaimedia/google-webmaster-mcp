@@ -8,6 +8,18 @@ The most effective workflow combines the three pillars of the tool: **Google Sea
 
 ---
 
+## Prerequisites for Global Use
+
+Since this tool is installed globally, it needs to know **which** project you are working on.
+
+1.  **Context is Key**: Ensure your AI agent knows the context.
+    *   **Option A (.env)**: Create a `.env` file in your project root with `GTM_ID`, `GSC_SITE`, and `GA4_PROPERTY_ID`.
+    *   **Option B (Prompt)**: Explicitly tell the agent: "Use GTM container GTM-XXXX and GSC site https://example.com".
+
+2.  **Authentication**: Ensure you have authenticated globally using `npm run auth` (or `google-webmaster-mcp-auth`).
+
+---
+
 ### Phase 1: Audit (Google Search Console)
 **Goal**: Ensure your site is visible, indexed, and error-free.
 

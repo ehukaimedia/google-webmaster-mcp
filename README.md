@@ -153,6 +153,27 @@ Edit your `claude_desktop_config.json`:
 }
 ```
 
+#### Antigravity Configuration
+Edit your global config at `~/.gemini/antigravity/mcp_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "google-webmaster": {
+      "command": "node",
+      "args": [
+        "/Volumes/Extreme SSD/AI-Applications/Google-Webmaster-MCP/dist/index.js"
+      ],
+      "env": {
+        "GOOGLE_CLIENT_ID": "YOUR_CLIENT_ID",
+        "GOOGLE_CLIENT_SECRET": "YOUR_CLIENT_SECRET"
+      }
+    }
+  }
+}
+```
+**Note**: The authentication token is stored globally at `~/.config/google-webmaster-mcp/token.json`, allowing the tool to work across all your repositories without re-authentication.
+
 ### Multi-Repository Workflow
 
 This tool is designed to work seamlessly across multiple projects without reconfiguration.
