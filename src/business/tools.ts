@@ -68,6 +68,28 @@ export const BUSINESS_TOOLS: Tool[] = [
             required: ['accountId', 'locationId', 'reviewId', 'comment'],
         },
     },
+    {
+        name: 'business_update_location',
+        description: 'Update a Business Profile location. Use `updateMask` to specify which fields to update.',
+        inputSchema: {
+            type: 'object',
+            properties: {
+                locationId: {
+                    type: 'string',
+                    description: 'The location ID (e.g., "locations/12345")',
+                },
+                locationData: {
+                    type: 'object',
+                    description: 'JSON object containing the fields to update',
+                },
+                updateMask: {
+                    type: 'string',
+                    description: 'Comma-separated list of fields to update (e.g., "storeCode,phoneNumbers")',
+                },
+            },
+            required: ['locationId', 'locationData', 'updateMask'],
+        },
+    },
 ];
 
 export async function handleBusinessTool(name: string, args: any) {
@@ -98,6 +120,13 @@ export async function handleBusinessTool(name: string, args: any) {
             const resourceName = `accounts/${accId}/locations/${locId}/reviews/${revId}`;
             return {
                 content: [{ type: 'text', text: JSON.stringify(await client.replyToReview(resourceName, args.comment), null, 2) }],
+            };
+        }
+        case 'business_update_location': {
+            const locId = args.locationId.replace('locations/', '');
+            const resourceName = `locations/${locId}`;
+            return {
+                content: [{ type: 'text', text: JSON.stringify(await client.updateLocation(resourceName, args.locationData, args.updateMask), null, 2) }],
             };
         }
         default:

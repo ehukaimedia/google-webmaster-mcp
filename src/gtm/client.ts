@@ -360,7 +360,7 @@ export class GTMManager {
             requestBody: {
                 name,
                 type,
-                filter: filters
+                [type === 'customEvent' ? 'customEventFilter' : 'filter']: filters
             }
         });
         return trigger.data;
@@ -387,6 +387,34 @@ export class GTMManager {
             }
         });
         return variable.data;
+    }
+
+    async enableBuiltInVariable(type: string) {
+        if (!this.accountId || !this.containerId) {
+            if (!process.env.GTM_ID) throw new Error('GTM_ID environment variable not set');
+            await this.findContainer(process.env.GTM_ID);
+        }
+
+        const workspaces = await this.tagManager.accounts.containers.workspaces.list({
+            parent: `accounts/${this.accountId}/containers/${this.containerId}`
+        });
+        const workspace = workspaces.data.workspace?.[0];
+        if (!workspace) throw new Error('No workspace found');
+
+        // Check if already enabled
+        const existing = await this.tagManager.accounts.containers.workspaces.built_in_variables.list({
+            parent: `accounts/${this.accountId}/containers/${this.containerId}/workspaces/${workspace.workspaceId}`
+        });
+
+        if (existing.data.builtInVariable?.some((v: any) => v.type === type)) {
+            return { name: type, type, enabled: true, status: 'already_enabled' };
+        }
+
+        const result = await this.tagManager.accounts.containers.workspaces.built_in_variables.create({
+            parent: `accounts/${this.accountId}/containers/${this.containerId}/workspaces/${workspace.workspaceId}`,
+            type: [type]
+        });
+        return result.data;
     }
 
     async deleteVariable(variableId: string) {

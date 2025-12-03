@@ -18,6 +18,11 @@ A Unified Model Context Protocol (MCP) server for managing **Google Tag Manager 
 - **Reporting**: Run custom reports.
 - **Pulse**: Check active users and sessions.
 
+### 🏪 Google Business Profile
+- **Manage Locations**: List accounts and locations.
+- **Edit Profile**: Update location details (e.g., store code, phone numbers).
+- **Reviews**: View and reply to customer reviews.
+
 ## Installation
 
 1.  **Clone**:
@@ -101,6 +106,13 @@ google-webmaster-gtm-publish
 
 # Publish with custom notes
 google-webmaster-gtm-publish GTM-XXXX "Updated GA4 tags"
+```
+
+#### 📈 Setup GA4 Tags
+Automatically creates GA4 Configuration and Event tags (contact_click, generate_lead) in GTM.
+```bash
+# Requires GTM_ID and GA4_MID in .env
+google-webmaster-setup-ga4
 ```
 
 ## Troubleshooting

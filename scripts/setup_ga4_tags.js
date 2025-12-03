@@ -25,6 +25,15 @@ async function setup() {
         const existingTags = await gtm.listTags();
         const existingTriggers = await gtm.listTriggers();
 
+        // 0. Enable Built-in Variables
+        console.log('Enabling Built-in Variables...');
+        try {
+            await gtm.enableBuiltInVariable('clickText');
+            console.log('✅ Enabled Built-in Variable: Click Text');
+        } catch (e) {
+            console.log('ℹ️ Click Text might already be enabled or failed to enable:', e.message);
+        }
+
         // 1. GA4 Configuration Tag
         console.log('Checking GA4 Configuration Tag...');
         let configTag = findEntity(existingTags, 'GA4 Configuration');

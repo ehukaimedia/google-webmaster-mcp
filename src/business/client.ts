@@ -77,4 +77,14 @@ export class BusinessProfileClient {
         });
         return res.data;
     }
+
+    async updateLocation(locationName: string, locationData: any, updateMask: string) {
+        // locationName: locations/{locationId}
+        const res = await this.businessInformation.locations.patch({
+            name: locationName,
+            updateMask,
+            requestBody: locationData,
+        });
+        return res.data;
+    }
 }

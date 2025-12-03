@@ -22,22 +22,25 @@ async function test() {
                 const location = locations[0];
                 console.log(`Using Location: ${location.name} (${location.title})`);
 
-                // Construct resource name for reviews: accounts/{accountId}/locations/{locationId}
-                // location.name is usually "locations/{locationId}"
-                // account.name is "accounts/{accountId}"
-                const locId = location.name?.split('/')[1];
-                const accId = account.name?.split('/')[1];
-                const resourceName = `accounts/${accId}/locations/${locId}`;
+                // Test Update (Dry Run / Safe Update)
+                // We will try to update the "storeCode" to its current value to verify the API call works without changing data.
+                if (location.storeCode) {
+                    console.log(`\nTesting Update on ${location.name}...`);
+                    console.log(`Current Store Code: ${location.storeCode}`);
 
-                console.log(`\nFetching Reviews for ${resourceName}...`);
-                try {
-                    const reviews = await client.getReviews(resourceName);
-                    console.log(`Found ${reviews.length} reviews.`);
-                    if (reviews.length > 0) {
-                        console.log('Sample Review:', JSON.stringify(reviews[0], null, 2));
+                    try {
+                        const updated = await client.updateLocation(
+                            location.name!,
+                            { storeCode: location.storeCode },
+                            'storeCode'
+                        );
+                        console.log('Update Successful!');
+                        console.log('Updated Location:', JSON.stringify(updated, null, 2));
+                    } catch (e: any) {
+                        console.error('Update Failed:', e.message);
                     }
-                } catch (e: any) {
-                    console.error('Error fetching reviews:', e.message);
+                } else {
+                    console.log('Location has no storeCode, skipping update test.');
                 }
             }
         }
