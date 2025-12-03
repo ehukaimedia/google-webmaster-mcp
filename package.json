@@ -8,7 +8,8 @@
     "google-webmaster-audit": "./scripts/audit.js",
     "google-webmaster-submit-sitemap": "./scripts/submit_sitemap.js",
     "google-webmaster-gtm-validate": "./scripts/validate_gtm.js",
-    "google-webmaster-gtm-publish": "./scripts/publish_gtm.js"
+    "google-webmaster-gtm-publish": "./scripts/publish_gtm.js",
+    "google-webmaster-setup-ga4": "./scripts/setup_ga4_tags.js"
   },
   "scripts": {
     "build": "tsc",
@@ -19,6 +20,7 @@
     "sitemap": "node scripts/submit_sitemap.js",
     "validate": "node scripts/validate_gtm.js",
     "publish": "node scripts/publish_gtm.js",
+    "setup-ga4": "node scripts/setup_ga4_tags.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
