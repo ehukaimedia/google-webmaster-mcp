@@ -131,6 +131,20 @@ Lists active posts for your business location.
 google-webmaster-business-posts
 ```
 
+### 🌍 Multi-Location Support
+If your business has multiple locations, you can target a specific one by setting the `BUSINESS_LOCATION_ID` in your `.env` file.
+
+```env
+# Target Location A
+BUSINESS_LOCATION_ID=123456789
+```
+
+To switch to another location, simply update the variable or use a different `.env` file.
+```env
+# Target Location B
+BUSINESS_LOCATION_ID=987654321
+```
+
 ## Troubleshooting
 
 ### "Error: Missing configuration"

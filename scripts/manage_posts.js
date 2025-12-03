@@ -10,18 +10,42 @@ async function managePosts() {
         let targetLocation = null;
         let targetAccount = null;
 
-        for (const account of accounts) {
-            const locations = await client.listLocations(account.name);
-            const found = locations.find(l => l.title === 'Oahu Garage Doors');
-            if (found) {
-                targetLocation = found;
-                targetAccount = account;
-                break;
+        // Priority 1: BUSINESS_LOCATION_ID from .env
+        if (process.env.BUSINESS_LOCATION_ID) {
+            const targetId = process.env.BUSINESS_LOCATION_ID;
+            console.log(`Searching for configured Location ID: ${targetId}`);
+
+            for (const account of accounts) {
+                const locations = await client.listLocations(account.name);
+                const found = locations.find(l => l.name.endsWith(targetId));
+                if (found) {
+                    targetLocation = found;
+                    targetAccount = account;
+                    break;
+                }
+            }
+        }
+
+        // Priority 2: BUSINESS_NAME from .env or hardcoded fallback (for backward compatibility)
+        if (!targetLocation) {
+            const targetName = process.env.BUSINESS_NAME || 'Oahu Garage Doors';
+            if (!process.env.BUSINESS_LOCATION_ID) {
+                console.log(`No Location ID configured. Searching by name: "${targetName}"...`);
+            }
+
+            for (const account of accounts) {
+                const locations = await client.listLocations(account.name);
+                const found = locations.find(l => l.title === targetName);
+                if (found) {
+                    targetLocation = found;
+                    targetAccount = account;
+                    break;
+                }
             }
         }
 
         if (!targetLocation || !targetAccount) {
-            console.error('Location not found.');
+            console.error('Location not found. Please set BUSINESS_LOCATION_ID in your .env file.');
             return;
         }
 
