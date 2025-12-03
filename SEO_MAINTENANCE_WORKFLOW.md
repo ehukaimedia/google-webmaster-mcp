@@ -18,7 +18,10 @@ Since this tool is installed globally, it needs to know **which** project you ar
         ```env
         GTM_ID=GTM-XXXXXX
         GSC_SITE=https://example.com
+        GSC_SITE=https://example.com
         GA4_PROPERTY_ID=123456789
+        BUSINESS_ACCOUNT_ID=123456789
+        BUSINESS_LOCATION_ID=987654321
         ```
 
 2.  **Authentication**: Ensure you have authenticated globally using the command:

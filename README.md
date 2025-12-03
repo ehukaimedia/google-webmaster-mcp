@@ -72,7 +72,10 @@ Ensure you have a `.env` file in your **current working directory** with:
 ```env
 GTM_ID=GTM-XXXX
 GSC_SITE=https://example.com
+GSC_SITE=https://example.com
 GA4_PROPERTY_ID=123456789
+BUSINESS_ACCOUNT_ID=123456789
+BUSINESS_LOCATION_ID=987654321
 ```
 
 **Available Commands**:
@@ -114,6 +117,18 @@ Automatically creates GA4 Configuration and Event tags (contact_click, generate_
 ```bash
 # Requires GTM_ID and GA4_MID in .env
 google-webmaster-setup-ga4
+```
+
+#### 🏪 Business Profile Audit
+Checks for unreplied reviews and lists locations.
+```bash
+google-webmaster-business-audit
+```
+
+#### 📮 Manage Business Posts
+Lists active posts for your business location.
+```bash
+google-webmaster-business-posts
 ```
 
 ## Troubleshooting
