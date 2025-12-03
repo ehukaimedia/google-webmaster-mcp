@@ -32,6 +32,14 @@ export class BusinessProfileClient {
         return res.data.locations || [];
     }
 
+    async getLocation(name: string, readMask: string) {
+        const res = await this.businessInformation.locations.get({
+            name,
+            readMask,
+        });
+        return res.data;
+    }
+
     async getReviews(locationName: string) {
         // locationName format: "locations/12345" or "accounts/12345/locations/12345"
         // The v4 API expects "accounts/{accountId}/locations/{locationId}/reviews"
@@ -84,6 +92,54 @@ export class BusinessProfileClient {
             name: locationName,
             updateMask,
             requestBody: locationData,
+        });
+        return res.data;
+    }
+
+    async createPost(locationName: string, postData: any) {
+        // locationName: locations/{locationId}
+        // API expects: accounts/{accountId}/locations/{locationId}/localPosts
+        // We need to fetch the account ID first if not provided in the name, but usually locationName from listLocations includes it?
+        // Actually listLocations returns "locations/{locationId}".
+        // We need the account ID.
+        // Wait, the v4 API for reviews used `accounts/{accId}/locations/{locId}`.
+        // Let's check how we handled reviews.
+        // In `getReviews`, we passed `resourceName` which was constructed in the tool handler.
+        // So we should expect `locationName` here to be the full resource name: `accounts/{accId}/locations/{locId}`.
+
+        const url = `https://mybusiness.googleapis.com/v4/${locationName}/localPosts`;
+        const res = await this.authClient.request({
+            url,
+            method: 'POST',
+            data: postData
+        });
+        return res.data;
+    }
+
+    async listPosts(parent: string) {
+        // parent: accounts/{accountId}/locations/{locationId}
+        const url = `https://mybusiness.googleapis.com/v4/${parent}/localPosts`;
+        const res = await this.authClient.request({ url });
+        return res.data.localPosts || [];
+    }
+
+    async deletePost(name: string) {
+        // name: accounts/{accountId}/locations/{locationId}/localPosts/{postId}
+        const url = `https://mybusiness.googleapis.com/v4/${name}`;
+        const res = await this.authClient.request({
+            url,
+            method: 'DELETE'
+        });
+        return res.data;
+    }
+
+    async updatePost(name: string, postData: any, updateMask: string) {
+        // name: accounts/{accountId}/locations/{locationId}/localPosts/{postId}
+        const url = `https://mybusiness.googleapis.com/v4/${name}?updateMask=${updateMask}`;
+        const res = await this.authClient.request({
+            url,
+            method: 'PATCH',
+            data: postData
         });
         return res.data;
     }

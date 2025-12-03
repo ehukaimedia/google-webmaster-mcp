@@ -90,6 +90,101 @@ export const BUSINESS_TOOLS: Tool[] = [
             required: ['locationId', 'locationData', 'updateMask'],
         },
     },
+    {
+        name: 'business_create_post',
+        description: 'Create a Local Post (update, offer, event) for a Business Profile location.',
+        inputSchema: {
+            type: 'object',
+            properties: {
+                accountId: {
+                    type: 'string',
+                    description: 'The account ID (e.g., "accounts/12345")',
+                },
+                locationId: {
+                    type: 'string',
+                    description: 'The location ID (e.g., "locations/12345")',
+                },
+                topicType: {
+                    type: 'string',
+                    enum: ['STANDARD', 'EVENT', 'OFFER', 'ALERT'],
+                    description: 'The type of post.',
+                },
+                summary: {
+                    type: 'string',
+                    description: 'The text content of the post.',
+                },
+                callToAction: {
+                    type: 'object',
+                    description: 'Optional call to action (actionType, url).',
+                },
+                event: {
+                    type: 'object',
+                    description: 'Optional event details (title, schedule). Required for EVENT type.',
+                },
+                offer: {
+                    type: 'object',
+                    description: 'Optional offer details (couponCode, redeemOnlineUrl, termsConditions). Required for OFFER type.',
+                },
+                media: {
+                    type: 'array',
+                    items: {
+                        type: 'object',
+                        properties: {
+                            sourceUrl: { type: 'string' },
+                        },
+                    },
+                    description: 'Optional list of media items.',
+                },
+            },
+            required: ['accountId', 'locationId', 'topicType', 'summary'],
+        },
+    },
+    {
+        name: 'business_list_posts',
+        description: 'List Local Posts for a Business Profile location.',
+        inputSchema: {
+            type: 'object',
+            properties: {
+                accountId: { type: 'string' },
+                locationId: { type: 'string' },
+            },
+            required: ['accountId', 'locationId'],
+        },
+    },
+    {
+        name: 'business_delete_post',
+        description: 'Delete a Local Post.',
+        inputSchema: {
+            type: 'object',
+            properties: {
+                accountId: { type: 'string' },
+                locationId: { type: 'string' },
+                postId: { type: 'string' },
+            },
+            required: ['accountId', 'locationId', 'postId'],
+        },
+    },
+    {
+        name: 'business_update_post',
+        description: 'Update a Local Post.',
+        inputSchema: {
+            type: 'object',
+            properties: {
+                accountId: { type: 'string' },
+                locationId: { type: 'string' },
+                postId: { type: 'string' },
+                postData: {
+                    type: 'object',
+                    description: 'JSON object containing the fields to update',
+                },
+                updateMask: {
+                    type: 'string',
+                    description: 'Comma-separated list of fields to update (e.g., "summary,callToAction")',
+                },
+            },
+            required: ['accountId', 'locationId', 'postId', 'postData', 'updateMask'],
+        },
+    },
 ];
 
 export async function handleBusinessTool(name: string, args: any) {
@@ -127,6 +222,48 @@ export async function handleBusinessTool(name: string, args: any) {
             const resourceName = `locations/${locId}`;
             return {
                 content: [{ type: 'text', text: JSON.stringify(await client.updateLocation(resourceName, args.locationData, args.updateMask), null, 2) }],
+            };
+        }
+        case 'business_create_post': {
+            const locId = args.locationId.replace('locations/', '');
+            const accId = args.accountId.replace('accounts/', '');
+            const resourceName = `accounts/${accId}/locations/${locId}`;
+
+            const postData: any = {
+                topicType: args.topicType,
+                summary: args.summary,
+                callToAction: args.callToAction,
+                event: args.event,
+                offer: args.offer,
+                media: args.media,
+            };
+
+            return {
+                content: [{ type: 'text', text: JSON.stringify(await client.createPost(resourceName, postData), null, 2) }],
+            };
+        }
+        case 'business_list_posts': {
+            const locId = args.locationId.replace('locations/', '');
+            const accId = args.accountId.replace('accounts/', '');
+            const resourceName = `accounts/${accId}/locations/${locId}`;
+            return {
+                content: [{ type: 'text', text: JSON.stringify(await client.listPosts(resourceName), null, 2) }],
+            };
+        }
+        case 'business_delete_post': {
+            const locId = args.locationId.replace('locations/', '');
+            const accId = args.accountId.replace('accounts/', '');
+            const resourceName = `accounts/${accId}/locations/${locId}/localPosts/${args.postId}`;
+            return {
+                content: [{ type: 'text', text: JSON.stringify(await client.deletePost(resourceName), null, 2) }],
+            };
+        }
+        case 'business_update_post': {
+            const locId = args.locationId.replace('locations/', '');
+            const accId = args.accountId.replace('accounts/', '');
+            const resourceName = `accounts/${accId}/locations/${locId}/localPosts/${args.postId}`;
+            return {
+                content: [{ type: 'text', text: JSON.stringify(await client.updatePost(resourceName, args.postData, args.updateMask), null, 2) }],
             };
         }
         default:

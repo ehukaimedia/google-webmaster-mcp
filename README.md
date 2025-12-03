@@ -21,6 +21,7 @@ A Unified Model Context Protocol (MCP) server for managing **Google Tag Manager 
 ### 🏪 Google Business Profile
 - **Manage Locations**: List accounts and locations.
 - **Edit Profile**: Update location details (e.g., store code, phone numbers).
+- **Manage Posts**: Create, list, update, and delete local posts (events, offers, updates).
 - **Reviews**: View and reply to customer reviews.
 
 ## Installation
