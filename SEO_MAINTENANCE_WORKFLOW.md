@@ -16,7 +16,10 @@ Since this tool is installed globally, it needs to know **which** project you ar
     *   **Option A (.env)**: Create a `.env` file in your project root with `GTM_ID`, `GSC_SITE`, and `GA4_PROPERTY_ID`.
     *   **Option B (Prompt)**: Explicitly tell the agent: "Use GTM container GTM-XXXX and GSC site https://example.com".
 
-2.  **Authentication**: Ensure you have authenticated globally using `npm run auth` (or `google-webmaster-mcp-auth`).
+2.  **Authentication**: Ensure you have authenticated globally using the command:
+    ```bash
+    google-webmaster-mcp-auth
+    ```
 
 ---
 
