@@ -65,6 +65,9 @@ Since this tool is installed globally, it needs to know **which** project you ar
     *   Reply to reviews using `business_reply_review` to engage with customers.
 2.  **Profile Updates**:
     *   Keep your business information (hours, phone, etc.) up to date using `business_update_location`.
+3.  **Post Management**:
+    *   Share updates, offers, and events using `business_create_post`.
+    *   Manage active posts with `business_list_posts`, `business_update_post`, and `business_delete_post`.
 
 
 ---
