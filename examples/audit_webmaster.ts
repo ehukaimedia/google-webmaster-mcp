@@ -1,8 +1,16 @@
-import { GSCClient } from './src/gsc/client';
-import { AnalyticsClient } from './src/analytics/client';
-import { GTMManager } from './src/gtm/client';
+import { GSCClient } from '../src/gsc/client.js';
+import { AnalyticsClient } from '../src/analytics/client.js';
+import { GTMManager } from '../src/gtm/client.js';
 
 async function audit() {
+    const args = process.argv.slice(2);
+    if (args.length < 3) {
+        console.log('Usage: ts-node examples/audit_webmaster.ts <GTM_ID> <SITE_URL> <GA4_PROPERTY_ID>');
+        process.exit(1);
+    }
+
+    const [gtmId, siteUrl, ga4PropertyId] = args;
+
     try {
         console.log('Starting Audit...\n');
 
@@ -10,7 +18,6 @@ async function audit() {
         console.log('### Google Tag Manager Audit');
         const gtm = new GTMManager();
         await gtm.initialize();
-        const gtmId = 'GTM-PWS8Q6';
 
         console.log(`Connecting to container: ${gtmId}`);
         await gtm.findContainer(gtmId);
@@ -41,7 +48,6 @@ async function audit() {
         // --- GSC Audit ---
         console.log('### Google Search Console Audit');
         const gsc = await GSCClient.create();
-        const siteUrl = 'https://aieafamilydental.com/';
 
         console.log(`Connecting to property: ${siteUrl}`);
 
@@ -103,7 +109,6 @@ async function audit() {
         // --- GA4 Audit ---
         console.log('### Google Analytics 4 Audit');
         const analytics = await AnalyticsClient.create();
-        const ga4PropertyId = '387066876';
 
         console.log(`Connecting to Property ID: ${ga4PropertyId}`);
 

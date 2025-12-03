@@ -1,4 +1,4 @@
-import { AnalyticsClient } from './src/analytics/client';
+import { AnalyticsClient } from '../src/analytics/client.js';
 
 async function demo() {
     try {
@@ -14,14 +14,14 @@ async function demo() {
             console.log(`Account: ${account.account} (${account.displayName})`);
             account.propertySummaries?.forEach((prop: any) => {
                 console.log(`  - Property: ${prop.property} (${prop.displayName})`);
-                if (prop.displayName.toLowerCase().includes('aieafamilydental')) {
-                    propertyId = prop.property.split('/')[1];
-                }
             });
         });
 
-        if (!propertyId) {
-            console.log('Could not find "Aiea Family Dental" property automatically. Using first available if any.');
+        const args = process.argv.slice(2);
+        if (args.length > 0) {
+            propertyId = args[0];
+        } else {
+            console.log('\nNo property ID provided. Using first available property.');
             const firstProp = summaries[0]?.propertySummaries?.[0];
             if (firstProp && firstProp.property) propertyId = firstProp.property.split('/')[1];
         }

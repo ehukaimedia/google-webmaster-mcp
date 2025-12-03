@@ -1,11 +1,16 @@
-import { GSCClient } from './src/gsc/client';
+import { GSCClient } from '../src/gsc/client.js';
 
 async function submit() {
+    const args = process.argv.slice(2);
+    if (args.length < 2) {
+        console.log('Usage: ts-node examples/submit_sitemap.ts <SITE_URL> <SITEMAP_URL>');
+        process.exit(1);
+    }
+    const [siteUrl, sitemapUrl] = args;
+
     try {
         console.log('Initializing GSC Client...');
         const gsc = await GSCClient.create();
-        const siteUrl = 'https://aieafamilydental.com/';
-        const sitemapUrl = 'https://aieafamilydental.com/sitemap.xml';
 
         console.log(`Submitting sitemap: ${sitemapUrl}`);
         await gsc.submitSitemap(siteUrl, sitemapUrl);
