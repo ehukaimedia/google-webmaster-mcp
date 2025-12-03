@@ -50,6 +50,29 @@ This tool allows AI agents (like Claude, Cursor, etc.) to interact with your Goo
     npm run build
     ```
 
+## Examples
+
+The `examples/` directory contains scripts demonstrating how to use the client libraries programmatically. These scripts are designed to be generic and require command-line arguments.
+
+### Running Examples
+
+**Audit a Site (GTM, GSC, GA4):**
+```bash
+npx ts-node examples/audit_webmaster.ts <GTM_ID> <SITE_URL> <GA4_PROPERTY_ID>
+# Example:
+# npx ts-node examples/audit_webmaster.ts GTM-XXXXXX https://example.com 123456789
+```
+
+**Submit a Sitemap:**
+```bash
+npx ts-node examples/submit_sitemap.ts <SITE_URL> <SITEMAP_URL>
+```
+
+**Demo Analytics Report:**
+```bash
+npx ts-node examples/demo_analytics.ts [GA4_PROPERTY_ID]
+```
+
 ## Configuration
 
 1.  **Create a `.env` file**:
