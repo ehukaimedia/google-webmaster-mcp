@@ -57,6 +57,16 @@ Since this tool is installed globally, it needs to know **which** project you ar
 3.  **Deployment**:
     *   Run `google-webmaster-gtm-publish` to snapshot and publish your changes.
 
+### Phase 4: Awareness (Google Business Profile)
+**Goal**: Manage local presence and reputation.
+
+1.  **Review Management**:
+    *   Use `business_get_reviews` to monitor customer feedback.
+    *   Reply to reviews using `business_reply_review` to engage with customers.
+2.  **Profile Updates**:
+    *   Keep your business information (hours, phone, etc.) up to date using `business_update_location`.
+
+
 ---
 
 ## Example Scenarios
