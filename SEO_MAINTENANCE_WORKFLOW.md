@@ -12,9 +12,14 @@ The most effective workflow combines the three pillars of the tool: **Google Sea
 
 Since this tool is installed globally, it needs to know **which** project you are working on.
 
-1.  **Context is Key**: Ensure your AI agent knows the context.
-    *   **Option A (.env)**: Create a `.env` file in your project root with `GTM_ID`, `GSC_SITE`, and `GA4_PROPERTY_ID`.
-    *   **Option B (Prompt)**: Explicitly tell the agent: "Use GTM container GTM-XXXX and GSC site https://example.com".
+1.  **Context is Key**: The tools need to know which site to act on.
+    *   **Create a `.env` file** in the **root of your project** (e.g., inside `oahugaragedoors.com/`).
+    *   **Required Variables**:
+        ```env
+        GTM_ID=GTM-XXXXXX
+        GSC_SITE=https://example.com
+        GA4_PROPERTY_ID=123456789
+        ```
 
 2.  **Authentication**: Ensure you have authenticated globally using the command:
     ```bash
@@ -27,40 +32,30 @@ Since this tool is installed globally, it needs to know **which** project you ar
 **Goal**: Ensure your site is visible, indexed, and error-free.
 
 1.  **Health Check**:
-    *   Use `gsc_list_sites` to confirm you are targeting the correct property.
-    *   **NEW**: Use `gsc_get_performance_overview` for a 30-day snapshot of Clicks, Impressions, and Top Pages.
-    *   Use `gsc_list_sitemaps` to ensure your sitemaps are submitted and fresh.
+    *   Run `google-webmaster-audit` to get a snapshot of GSC performance and sitemap status.
+    *   If sitemaps are missing, run `google-webmaster-submit-sitemap`.
 2.  **Indexing Status**:
-    *   Use `gsc_inspect_url` on key landing pages (Home, Services, Blog) to verify they are:
-        *   Indexed successfully.
-        *   Mobile-friendly.
-        *   Serving the correct canonical URL.
+    *   Use `gsc_inspect_url` (via MCP) on key landing pages.
 3.  **Performance Review**:
-    *   Use `gsc_analytics_query` for deep dives into specific queries or countries.
+    *   Review the "Top Pages" output from the audit command.
 
 ### Phase 2: Analyze (Google Analytics 4)
 **Goal**: Understand user behavior and verify KPI performance.
 
-1.  **Preparation**:
-    *   **NEW**: Use `analytics_get_metadata` to find the exact API names for dimensions (e.g., `city`) and metrics (e.g., `activeUsers`) before running reports.
-2.  **Traffic Pulse**:
-    *   Use `analytics_run_report` to check sessions and users for the past 7-30 days.
-    *   Compare against the previous period to identify trends.
-3.  **KPI Verification**:
-    *   Check specific conversion events (e.g., `generate_lead`, `purchase`, `sign_up`).
+1.  **Traffic Pulse**:
+    *   Run `google-webmaster-audit` to see the last 7 days of active users and sessions.
+2.  **KPI Verification**:
+    *   Check specific conversion events using the MCP tool `analytics_run_report`.
 
 ### Phase 3: Action (Google Tag Manager)
 **Goal**: Fix tracking gaps and implement new features.
 
 1.  **Gap Filling**:
-    *   If Phase 2 revealed missing data, use GTM to fix it.
-    *   **NEW**: Use `gtm_create_tag` with the `triggerName` parameter. You can simply say "Create a tag that fires on 'Click - Contact Button'" and the tool will automatically find or create that trigger for you.
-    *   Use `gtm_create_ga4_event_tag` for specialized event tracking.
-2.  **Deployment**:
-    *   Use `gtm_create_version` to snapshot your changes.
-    *   Use `gtm_publish_version` to push changes live.
-3.  **Validation**:
-    *   Use `gtm_validate_workspace` before publishing to ensure no broken references.
+    *   Use `gtm_create_tag` (via MCP) to add missing tags.
+2.  **Validation**:
+    *   Run `google-webmaster-gtm-validate` to check for missing triggers or variables.
+3.  **Deployment**:
+    *   Run `google-webmaster-gtm-publish` to snapshot and publish your changes.
 
 ---
 

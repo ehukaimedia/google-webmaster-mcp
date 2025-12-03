@@ -4,13 +4,21 @@
   "type": "module",
   "bin": {
     "google-webmaster-mcp": "./dist/index.js",
-    "google-webmaster-mcp-auth": "./dist/auth/cli.js"
+    "google-webmaster-mcp-auth": "./dist/auth/cli.js",
+    "google-webmaster-audit": "./scripts/audit.js",
+    "google-webmaster-submit-sitemap": "./scripts/submit_sitemap.js",
+    "google-webmaster-gtm-validate": "./scripts/validate_gtm.js",
+    "google-webmaster-gtm-publish": "./scripts/publish_gtm.js"
   },
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
     "dev": "ts-node src/index.ts",
     "auth": "node dist/auth/cli.js",
+    "audit": "node scripts/audit.js",
+    "sitemap": "node scripts/submit_sitemap.js",
+    "validate": "node scripts/validate_gtm.js",
+    "publish": "node scripts/publish_gtm.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
