@@ -12,6 +12,9 @@ export const SCOPES = [
     // Google Analytics (GA4)
     'https://www.googleapis.com/auth/analytics',
     'https://www.googleapis.com/auth/analytics.readonly',
+
+    // Business Profile
+    'https://www.googleapis.com/auth/business.manage',
 ];
 
 export const PORT = 3201;
