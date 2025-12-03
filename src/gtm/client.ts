@@ -467,7 +467,7 @@ export class GTMManager {
     async createGa4ConfigurationTag(
         name: string,
         measurementId: string,
-        options?: { sendPageView?: boolean; triggerType?: string; fieldsToSet?: Record<string, string> }
+        options?: { sendPageView?: boolean; triggerType?: string; triggerId?: string; fieldsToSet?: Record<string, string> }
     ) {
         if (!this.accountId || !this.containerId) {
             if (!process.env.GTM_ID) throw new Error('GTM_ID environment variable not set');

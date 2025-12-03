@@ -44,4 +44,11 @@ export class AnalyticsClient {
         });
         return res.data;
     }
+
+    async listDataStreams(propertyId: string) {
+        const res = await this.adminClient.properties.dataStreams.list({
+            parent: `properties/${propertyId}`
+        });
+        return res.data.dataStreams || [];
+    }
 }
