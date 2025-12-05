@@ -70,8 +70,20 @@ Since this tool is installed globally, it needs to know **which** project you ar
     *   Keep your business information (hours, phone, etc.) up to date using `business_update_location`.
 3.  **Post Management**:
     *   Share updates, offers, and events using `business_create_post`.
+    *   Create portfolio showcase posts with `node scripts/create_portfolio_post.js`.
     *   Manage active posts with `business_list_posts`, `business_update_post`, and `business_delete_post`.
 
+### Phase 5: Conversion Optimization (Tag Manager KPIs)
+**Goal**: Track and optimize key performance indicators across your digital presence.
+
+1.  **KPI Tag Setup**:
+    *   Run `node scripts/setup_kpi_tags.js` to create conversion tracking tags.
+    *   Track important user actions: form submissions, phone clicks, quote requests.
+2.  **Tag Validation**:
+    *   Use `google-webmaster-gtm-validate` to ensure all KPI tags have proper triggers.
+3.  **Performance Monitoring**:
+    *   Review KPI metrics in GA4 with `analytics_run_report`.
+    *   Identify high-performing conversion paths and optimize underperforming ones.
 
 ---
 

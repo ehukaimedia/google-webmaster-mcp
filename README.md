@@ -131,6 +131,20 @@ Lists active posts for your business location.
 google-webmaster-business-posts
 ```
 
+#### 📝 Create Business Portfolio Post
+Creates a custom portfolio post for your business location showcasing recent work.
+```bash
+# Requires BUSINESS_LOCATION_ID in .env
+node scripts/create_portfolio_post.js
+```
+
+#### 🎯 Setup KPI Tags
+Automatically creates conversion tracking tags for key performance indicators in GTM.
+```bash
+# Requires GTM_ID and GA4_MID in .env
+node scripts/setup_kpi_tags.js
+```
+
 ### 🌍 Multi-Location Support
 If your business has multiple locations, you can target a specific one by setting the `BUSINESS_LOCATION_ID` in your `.env` file.
 
