@@ -13,7 +13,7 @@ The most effective workflow combines the three pillars of the tool: **Google Sea
 Since this tool is installed globally, it needs to know **which** project you are working on.
 
 1.  **Context is Key**: The tools need to know which site to act on.
-    *   **Create a `.env` file** in the **root of your project** (e.g., inside `oahugaragedoors.com/`).
+    *   **Create a `.env` file** in the **root of your project** (e.g., inside `your-app-name/`).
     *   **Required Variables**:
         ```env
         GTM_ID=GTM-XXXXXX
@@ -84,6 +84,55 @@ Since this tool is installed globally, it needs to know **which** project you ar
 3.  **Performance Monitoring**:
     *   Review KPI metrics in GA4 with `analytics_run_report`.
     *   Identify high-performing conversion paths and optimize underperforming ones.
+
+### Phase 6: Advanced "Smart Analysis" Setup
+**Goal**: Move beyond "Total Leads" to "Leads by Source" (e.g., Hero Button vs. Footer Link) without creating hundreds of tags.
+
+1.  **Codebase Strategy (The "Label" Pattern)**:
+    *   Push a single generic event name (e.g., `generate_lead`) but add a specific unique `label`.
+    *   *Example*: `dataLayer.push({ event: 'generate_lead', label: 'header_quote_button' })`
+    *   *Example*: `dataLayer.push({ event: 'generate_lead', label: 'hero_quote_button' })`
+
+2.  **GTM Configuration (The "Dynamic Variable" Pattern)**:
+    *   **The Trap**: Standard Tags often ignore custom properties like `label`.
+    *   **The Fix**:
+        1.  **Create Variable**: Go to Variables -> User-Defined -> New -> **Data Layer Variable**. Name it `DLV - label`. Set Data Layer Variable Name to `label`.
+        2.  **Update Tag**: Open your `GA4 Event - Generate Lead` tag.
+        3.  **Map Parameter**: In "Event Parameters", add:
+            *   Parameter Name: `event_label`
+            *   Value: `{{DLV - label}}`
+    
+3.  **Result**:
+    *   **Execs see**: "50 Leads" (Generalization).
+    *   **Marketers see**: "30 from Hero, 20 from Header" (Granularity).
+
+### Phase 7: Advanced Troubleshooting (GSC & Schema)
+**Goal**: systematically resolve "Rich Result" or "Indexing" errors reported by Search Console.
+
+1.  **Diagnosis**:
+    *   **Identify**: Use `google-webmaster-audit` to list active GSC errors.
+    *   **Inspect**: Use `gsc_inspect_url` on a failing URL to get the specific error details.
+    *   **Isolate**: effective debugging requires checking both *Code* and *Tag Manager*.
+        *   *Code Check*: Does your source code (e.g., `layout.tsx`, `app.vue`, or `index.html`) have valid `JsonLd`?
+        *   *GTM Check*: Are there "Custom HTML" tags injecting conflicting schema? (Common root cause for "Multiple Aggregate Ratings").
+
+2.  **Resolution**:
+    *   **Fix**: Update the code or Delete the conflicting GTM tag.
+    *   **Verify**: Publish GTM container (if changed). Deploy code.
+    *   **Validate**: In GSC, click "Validate Fix" to trigger a recrawl.
+
+### Phase 8: Deep-Dive Analytics (Traffic Quality)
+**Goal**: Go beyond "Hits" to understand "Value".
+
+1.  **Traffic Quality Report**:
+    *   Use `analytics_run_report` with dimensions `sessionSourceMedium` and metrics `sessions, engagementRate`.
+    *   **Analysis**:
+        *   *High Volume / Low Engagement*: Bot traffic or bad targeting.
+        *   *Low Volume / High Engagement*: **Gold Mine**. Scale this channel (e.g., SEO, Yelp).
+    
+2.  **Conversion Attribution**:
+    *   Use `analytics_run_report` with dimensions `eventName, eventLabel` and metrics `eventCount`.
+    *   **Analysis**: Identify which specific buttons (Labels) are driving the leads.
 
 ---
 
