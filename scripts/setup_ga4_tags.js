@@ -51,20 +51,10 @@ async function setup() {
         // 2. Triggers
         console.log('\nChecking Triggers...');
 
-        const ensureTrigger = async (name, eventName) => {
+        const ensureTrigger = async (name, type, filters) => {
             let trigger = findEntity(existingTriggers, name);
             if (!trigger) {
-                trigger = await gtm.createTrigger(
-                    name,
-                    'customEvent',
-                    [{
-                        type: 'equals',
-                        parameter: [
-                            { type: 'template', key: 'arg0', value: '{{_event}}' },
-                            { type: 'template', key: 'arg1', value: eventName }
-                        ]
-                    }]
-                );
+                trigger = await gtm.createTrigger(name, type, filters);
                 console.log(`✅ Created Trigger '${name}': ${trigger.triggerId}`);
             } else {
                 console.log(`ℹ️ Using existing Trigger '${name}': ${trigger.triggerId}`);
@@ -72,8 +62,47 @@ async function setup() {
             return trigger;
         };
 
-        const contactTrigger = await ensureTrigger('Event - contact_click', 'contact_click');
-        const leadTrigger = await ensureTrigger('Event - generate_lead', 'generate_lead');
+        // Custom Event Triggers
+        const waitlistTrigger = await ensureTrigger('G4 Waitlist Submit', 'customEvent', [{
+            type: 'equals',
+            parameter: [
+                { type: 'template', key: 'arg0', value: '{{_event}}' },
+                { type: 'template', key: 'arg1', value: 'waitlist_submit' }
+            ]
+        }]);
+
+        // Link Click Triggers
+        const githubTrigger = await ensureTrigger('Outbound - GitHub', 'linkClick', [{
+            type: 'contains',
+            parameter: [
+                { type: 'template', key: 'arg0', value: '{{Click URL}}' },
+                { type: 'template', key: 'arg1', value: 'github.com' }
+            ]
+        }]);
+
+        const linkedinTrigger = await ensureTrigger('Outbound - LinkedIn', 'linkClick', [{
+            type: 'contains',
+            parameter: [
+                { type: 'template', key: 'arg0', value: '{{Click URL}}' },
+                { type: 'template', key: 'arg1', value: 'linkedin.com' }
+            ]
+        }]);
+
+        const mailtoTrigger = await ensureTrigger('Support Intent - Mailto', 'linkClick', [{
+            type: 'contains',
+            parameter: [
+                { type: 'template', key: 'arg0', value: '{{Click URL}}' },
+                { type: 'template', key: 'arg1', value: 'mailto:' }
+            ]
+        }]);
+
+        const telTrigger = await ensureTrigger('Support Intent - Tel', 'linkClick', [{
+            type: 'contains',
+            parameter: [
+                { type: 'template', key: 'arg0', value: '{{Click URL}}' },
+                { type: 'template', key: 'arg1', value: 'tel:' }
+            ]
+        }]);
 
         // 3. Event Tags
         console.log('\nChecking Event Tags...');
@@ -86,8 +115,6 @@ async function setup() {
                     measurementId,
                     eventName,
                     {
-                        // configTagId: configTag.tagId, // Causing API error?
-                        // triggerId: triggerId, // Wait, I need triggerId.
                         triggerId: triggerId,
                         eventParameters: params
                     }
@@ -98,12 +125,27 @@ async function setup() {
             }
         };
 
-        await ensureEventTag('GA4 Event - Contact Click', 'contact_click', contactTrigger.triggerId, {
-            method: '{{Click Text}}',
-            type: 'contact'
+        await ensureEventTag('GA4 - Lead Generation', 'generate_lead', waitlistTrigger.triggerId);
+
+        await ensureEventTag('GA4 - Click GitHub', 'click', githubTrigger.triggerId, {
+            link_url: '{{Click URL}}',
+            outbound: true,
+            outbound_dest: 'github'
         });
 
-        await ensureEventTag('GA4 Event - Generate Lead', 'generate_lead', leadTrigger.triggerId);
+        await ensureEventTag('GA4 - Click LinkedIn', 'click', linkedinTrigger.triggerId, {
+            link_url: '{{Click URL}}',
+            outbound: true,
+            outbound_dest: 'linkedin'
+        });
+
+        await ensureEventTag('GA4 - Contact Email', 'contact', mailtoTrigger.triggerId, {
+            method: 'email'
+        });
+
+        await ensureEventTag('GA4 - Contact Phone', 'contact', telTrigger.triggerId, {
+            method: 'phone'
+        });
 
     } catch (error) {
         console.error('Setup failed:', error);
