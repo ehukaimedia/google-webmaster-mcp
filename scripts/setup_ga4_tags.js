@@ -27,11 +27,14 @@ async function setup() {
 
         // 0. Enable Built-in Variables
         console.log('Enabling Built-in Variables...');
-        try {
-            await gtm.enableBuiltInVariable('clickText');
-            console.log('✅ Enabled Built-in Variable: Click Text');
-        } catch (e) {
-            console.log('ℹ️ Click Text might already be enabled or failed to enable:', e.message);
+        const variablesToEnable = ['clickText', 'clickUrl', 'clickTarget', 'clickId', 'clickClasses', 'clickElement'];
+        for (const type of variablesToEnable) {
+            try {
+                await gtm.enableBuiltInVariable(type);
+                console.log(`✅ Enabled Built-in Variable: ${type}`);
+            } catch (e) {
+                console.log(`ℹ️ ${type} might already be enabled or failed to enable:`, e.message);
+            }
         }
 
         // 1. GA4 Configuration Tag
@@ -104,6 +107,15 @@ async function setup() {
             ]
         }]);
 
+        // Audit Request Trigger (AI Marketing Update)
+        const auditTrigger = await ensureTrigger('Intent - Request AI Audit', 'linkClick', [{
+            type: 'contains',
+            parameter: [
+                { type: 'template', key: 'arg0', value: '{{Click URL}}' },
+                { type: 'template', key: 'arg1', value: '/contact-us' }
+            ]
+        }]);
+
         // 3. Event Tags
         console.log('\nChecking Event Tags...');
 
@@ -145,6 +157,12 @@ async function setup() {
 
         await ensureEventTag('GA4 - Contact Phone', 'contact', telTrigger.triggerId, {
             method: 'phone'
+        });
+
+        // AI Audit Conversion Tag
+        await ensureEventTag('GA4 - Intent - AI Audit', 'generate_lead', auditTrigger.triggerId, {
+            method: 'form_start',
+            lead_type: 'ai_audit'
         });
 
     } catch (error) {

@@ -145,6 +145,43 @@ Automatically creates conversion tracking tags for key performance indicators in
 node scripts/setup_kpi_tags.js
 ```
 
+---
+
+### 🔍 SEO/GEO Audit CLI
+
+A full 25-check technical audit tool that works on any URL (public or localhost).
+
+#### Standard Mode (Flags)
+```bash
+# Basic audit
+seo-audit https://example.com
+
+# With AI recommendations (requires: ollama serve)
+seo-audit http://localhost:3000 --ai
+
+# With PageSpeed score (public URLs only)
+seo-audit https://example.com --pagespeed
+
+# Batch mode (multiple URLs from file)
+seo-audit --file urls.txt
+```
+
+#### Smart Mode (Natural Language)
+```bash
+seo-audit-smart "audit localhost with AI"
+seo-audit-smart "check example.com performance"
+```
+
+**Checks Include:**
+- SEO (10): Title, Meta, H1, Alt Text, Canonical, OG Tags, etc.
+- GEO (4): Schema.org, FAQ, Citation Signals, Content Clarity
+- Security (5): HTTPS, CSP, HSTS, X-Frame-Options
+- Accessibility (4): Lang, Labels, Skip Nav, Focus
+- Mobile (2): Touch Targets, Font Legibility
+- Speed (1): PageSpeed Insights (optional)
+
+**Output:** JSON to stdout (pipe to file or parse with jq).
+
 ### 🌍 Multi-Location Support
 If your business has multiple locations, you can target a specific one by setting the `BUSINESS_LOCATION_ID` in your `.env` file.
 
