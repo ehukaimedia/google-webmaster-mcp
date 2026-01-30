@@ -51,4 +51,15 @@ export class AnalyticsClient {
         });
         return res.data.dataStreams || [];
     }
+
+    async createConversionEvent(propertyId: string, eventName: string) {
+        // Note: In GA4 API, "Key Events" are still called "ConversionEvents" resource
+        const res = await this.adminClient.properties.conversionEvents.create({
+            parent: `properties/${propertyId}`,
+            requestBody: {
+                eventName: eventName,
+            }
+        });
+        return res.data;
+    }
 }
