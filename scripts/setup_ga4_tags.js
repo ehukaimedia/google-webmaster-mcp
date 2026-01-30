@@ -66,20 +66,11 @@ async function setup() {
         };
 
         // Custom Event Triggers
-        const waitlistTrigger = await ensureTrigger('G4 Waitlist Submit', 'customEvent', [{
+        const leadTrigger = await ensureTrigger('Universal Lead Trigger', 'customEvent', [{
             type: 'equals',
             parameter: [
                 { type: 'template', key: 'arg0', value: '{{_event}}' },
-                { type: 'template', key: 'arg1', value: 'waitlist_submit' }
-            ]
-        }]);
-
-        // Link Click Triggers
-        const githubTrigger = await ensureTrigger('Outbound - GitHub', 'linkClick', [{
-            type: 'contains',
-            parameter: [
-                { type: 'template', key: 'arg0', value: '{{Click URL}}' },
-                { type: 'template', key: 'arg1', value: 'github.com' }
+                { type: 'template', key: 'arg1', value: 'generate_lead' }
             ]
         }]);
 
@@ -137,13 +128,8 @@ async function setup() {
             }
         };
 
-        await ensureEventTag('GA4 - Lead Generation', 'generate_lead', waitlistTrigger.triggerId);
+        await ensureEventTag('GA4 - Lead Generation', 'generate_lead', leadTrigger.triggerId);
 
-        await ensureEventTag('GA4 - Click GitHub', 'click', githubTrigger.triggerId, {
-            link_url: '{{Click URL}}',
-            outbound: true,
-            outbound_dest: 'github'
-        });
 
         await ensureEventTag('GA4 - Click LinkedIn', 'click', linkedinTrigger.triggerId, {
             link_url: '{{Click URL}}',

@@ -10,8 +10,6 @@
     "google-webmaster-gtm-validate": "./scripts/validate_gtm.js",
     "google-webmaster-gtm-publish": "./scripts/publish_gtm.js",
     "google-webmaster-setup-ga4": "./scripts/setup_ga4_tags.js",
-    "google-webmaster-business-audit": "./scripts/audit_business.js",
-    "google-webmaster-business-posts": "./scripts/manage_posts.js",
     "seo-audit": "./scripts/audit-cli.mjs",
     "seo-audit-smart": "./scripts/smart-audit.mjs"
   },

@@ -18,11 +18,7 @@ A Unified Model Context Protocol (MCP) server for managing **Google Tag Manager 
 - **Reporting**: Run custom reports.
 - **Pulse**: Check active users and sessions.
 
-### 🏪 Google Business Profile
-- **Manage Locations**: List accounts and locations.
-- **Edit Profile**: Update location details (e.g., store code, phone numbers).
-- **Manage Posts**: Create, list, update, and delete local posts (events, offers, updates).
-- **Reviews**: View and reply to customer reviews.
+
 
 ## Installation
 
@@ -74,8 +70,7 @@ GTM_ID=GTM-XXXX
 GSC_SITE=https://example.com
 GSC_SITE=https://example.com
 GA4_PROPERTY_ID=123456789
-BUSINESS_ACCOUNT_ID=123456789
-BUSINESS_LOCATION_ID=987654321
+
 ```
 
 **Available Commands**:
@@ -119,24 +114,6 @@ Automatically creates GA4 Configuration and Event tags (contact_click, generate_
 google-webmaster-setup-ga4
 ```
 
-#### 🏪 Business Profile Audit
-Checks for unreplied reviews and lists locations.
-```bash
-google-webmaster-business-audit
-```
-
-#### 📮 Manage Business Posts
-Lists active posts for your business location.
-```bash
-google-webmaster-business-posts
-```
-
-#### 📝 Create Business Portfolio Post
-Creates a custom portfolio post for your business location showcasing recent work.
-```bash
-# Requires BUSINESS_LOCATION_ID in .env
-node scripts/create_portfolio_post.js
-```
 
 #### 🎯 Setup KPI Tags
 Automatically creates conversion tracking tags for key performance indicators in GTM.
@@ -182,19 +159,7 @@ seo-audit-smart "check example.com performance"
 
 **Output:** JSON to stdout (pipe to file or parse with jq).
 
-### 🌍 Multi-Location Support
-If your business has multiple locations, you can target a specific one by setting the `BUSINESS_LOCATION_ID` in your `.env` file.
 
-```env
-# Target Location A
-BUSINESS_LOCATION_ID=123456789
-```
-
-To switch to another location, simply update the variable or use a different `.env` file.
-```env
-# Target Location B
-BUSINESS_LOCATION_ID=987654321
-```
 
 ## Troubleshooting
 

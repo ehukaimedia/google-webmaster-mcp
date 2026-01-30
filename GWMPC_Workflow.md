@@ -20,8 +20,7 @@ Since this tool is installed globally, it needs to know **which** project you ar
         GSC_SITE=https://example.com
         GSC_SITE=https://example.com
         GA4_PROPERTY_ID=123456789
-        BUSINESS_ACCOUNT_ID=123456789
-        BUSINESS_LOCATION_ID=987654321
+
         ```
 
 2.  **Authentication**: Ensure you have authenticated globally using the command:
@@ -51,39 +50,31 @@ Since this tool is installed globally, it needs to know **which** project you ar
     *   Check specific conversion events using the MCP tool `analytics_run_report`.
 
 ### Phase 3: Action (Google Tag Manager)
-**Goal**: Fix tracking gaps and implement new features.
+**Goal**: Automated Tracking & Implementation.
 
-1.  **Gap Filling**:
-    *   Use `gtm_create_tag` (via MCP) to add missing tags.
+1.  **Automate Baseline**:
+    *   Run `google-webmaster-setup-ga4` to automatically provision the **Universal Baseline**:
+        *   **Universal Lead Trigger**: Listens for the `generate_lead` event.
+        *   **Standard Tags**: Lead Gen, Email Clicks, Phone Clicks, LinkedIn views.
 2.  **Validation**:
     *   Run `google-webmaster-gtm-validate` to check for missing triggers or variables.
 3.  **Deployment**:
     *   Run `google-webmaster-gtm-publish` to snapshot and publish your changes.
 
-### Phase 4: Awareness (Google Business Profile)
-**Goal**: Manage local presence and reputation.
 
-1.  **Review Management**:
-    *   Use `business_get_reviews` to monitor customer feedback.
-    *   Reply to reviews using `business_reply_review` to engage with customers.
-2.  **Profile Updates**:
-    *   Keep your business information (hours, phone, etc.) up to date using `business_update_location`.
-3.  **Post Management**:
-    *   Share updates, offers, and events using `business_create_post`.
-    *   Create portfolio showcase posts with `node scripts/create_portfolio_post.js`.
-    *   Manage active posts with `business_list_posts`, `business_update_post`, and `business_delete_post`.
+### Phase 5: Conversion Optimization (KPI Strategy)
+**Goal**: Track and optimize key performance indicators using a tiered approach.
 
-### Phase 5: Conversion Optimization (Tag Manager KPIs)
-**Goal**: Track and optimize key performance indicators across your digital presence.
+1.  **Tier 1: The Universal Baseline (All Sites)**
+    *   **Logic**: Every site must track `generate_lead`.
+    *   **How**: Just call `window.dataLayer.push({ event: 'generate_lead' })` in your code. The automation handles the rest.
+    
+2.  **Tier 2: Custom KPIs (Site-Specific)**
+    *   **Logic**: Unique features like "3D Model Rotated" or "Tutorial Completed".
+    *   **How**: These require manual GTM setup or custom scripts *on top* of the baseline.
 
-1.  **KPI Tag Setup**:
-    *   Run `node scripts/setup_kpi_tags.js` to create conversion tracking tags.
-    *   Track important user actions: form submissions, phone clicks, quote requests.
-2.  **Tag Validation**:
-    *   Use `google-webmaster-gtm-validate` to ensure all KPI tags have proper triggers.
 3.  **Performance Monitoring**:
     *   Review KPI metrics in GA4 with `analytics_run_report`.
-    *   Identify high-performing conversion paths and optimize underperforming ones.
 
 ### Phase 6: Advanced "Smart Analysis" Setup
 **Goal**: Move beyond "Total Leads" to "Leads by Source" (e.g., Hero Button vs. Footer Link) without creating hundreds of tags.
