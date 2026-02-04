@@ -8,6 +8,26 @@ import { saveToken } from './auth.js';
 import 'dotenv/config';
 
 async function main() {
+    const args = process.argv.slice(2);
+
+    if (args.includes('--help') || args.includes('-h')) {
+        console.log(`
+Google Webmaster MCP Auth CLI
+
+Usage:
+  npm run auth [options]
+
+Options:
+  --profile=<name>   Specify a profile name for the credentials (default: "default")
+  --help, -h         Show this help message
+
+Examples:
+  npm run auth
+  npm run auth -- --profile=client_a
+        `);
+        process.exit(0);
+    }
+
     const clientId = process.env.GOOGLE_CLIENT_ID;
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
 
@@ -15,6 +35,11 @@ async function main() {
         console.error('Error: Missing GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET in .env');
         process.exit(1);
     }
+
+    const profileArg = args.find(arg => arg.startsWith('--profile='));
+    const profile = profileArg ? profileArg.split('=')[1] : 'default';
+
+    console.log(`\nInitializing authentication for profile: '${profile}'`);
 
     const oAuth2Client = new google.auth.OAuth2(clientId, clientSecret, REDIRECT_URI);
 
@@ -43,7 +68,13 @@ async function main() {
                 try {
                     const { tokens } = await oAuth2Client.getToken(code);
                     oAuth2Client.setCredentials(tokens);
-                    saveToken(tokens);
+
+                    // Parse profile from command line args
+                    const args = process.argv.slice(2);
+                    const profileArg = args.find(arg => arg.startsWith('--profile='));
+                    const profile = profileArg ? profileArg.split('=')[1] : 'default';
+
+                    saveToken(tokens, profile);
                     console.log('Setup complete.');
                 } catch (err) {
                     console.error('Error retrieving access token', err);

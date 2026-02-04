@@ -45,7 +45,14 @@ A Unified Model Context Protocol (MCP) server for managing **Google Tag Manager 
     -   Create Desktop App credentials in Google Cloud Console.
     -   Save Client ID and Secret.
 
-2.  **Authenticate**:
+4.  **Multi-Profile Support (Optional)**:
+    auth commands support a `--profile` flag to manage multiple accounts:
+    ```bash
+    npm run auth -- --profile=client_a
+    ```
+    To use a specific profile, set `GOOGLE_TOKEN_PROFILE=client_a` in your `.env` file or environment.
+
+5.  **Authenticate**:
     ```bash
     npm run auth
     ```
