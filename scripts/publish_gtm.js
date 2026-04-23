@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import 'dotenv/config';
-import { GTMManager } from '../dist/gtm/client.js';
+import { publishWorkspaceCommand } from '../dist/gtm/commands.js';
 
 async function publish() {
     const args = process.argv.slice(2);
@@ -15,22 +15,9 @@ async function publish() {
     }
 
     try {
-        const gtm = new GTMManager();
-        await gtm.initialize();
-        await gtm.findContainer(gtmId);
-
-        console.log(`Creating new version for container ${gtmId}...`);
-        const result = await gtm.createVersion('Version ' + new Date().toISOString(), versionNotes);
-
-        if (result.versionId) {
-            console.log(`Version created: ${result.versionId}`);
-            console.log('Publishing version...');
-            await gtm.publishVersion(result.versionId);
-            console.log('✅ Version published successfully.');
-        } else {
-            console.error('❌ Failed to create version. Response:', result);
-            process.exit(1);
-        }
+        console.log(`Creating and publishing a new version for container ${gtmId}...`);
+        const result = await publishWorkspaceCommand(gtmId, versionNotes);
+        console.log(`✅ Version ${result.versionId} published successfully.`);
     } catch (error) {
         console.error('Publish failed:', error);
         process.exit(1);

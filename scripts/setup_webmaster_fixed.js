@@ -1,6 +1,12 @@
 #!/usr/bin/env node
 import 'dotenv/config';
 import { GTMManager } from '../dist/gtm/client.js';
+import {
+    ensureCustomEventTrigger,
+    ensureDataLayerVariable,
+    ensureGa4EventTag,
+    resolveGa4ConfigTag,
+} from '../dist/gtm/fixed-setup-operations.js';
 
 // Hardcoded IDs from discovery
 const ACCOUNT_ID = '6142216323';
@@ -17,153 +23,55 @@ async function setup() {
         const gtm = new GTMManager();
         await gtm.initialize();
 
-        // MANUALLY SET IDs to bypass findContainer
-        gtm.accountId = ACCOUNT_ID;
-        gtm.containerId = CONTAINER_ID;
+        // Pin the discovered account/container instead of relying on GTM_ID lookup.
+        gtm.selectContainer(ACCOUNT_ID, CONTAINER_ID);
 
         const existingTags = await gtm.listTags();
         const existingTriggers = await gtm.listTriggers();
         const existingVariables = await gtm.listVariables();
 
-        const findEntity = (list, name) => list && list.find(i => i.name === name);
-
         // --- 1. Google Tag (GA4 Configuration) ---
         console.log('\n--- Checking/Creating Google Tag ---');
-        // Check for existing config tag by type 'gaawc'
-        const existingConfigTag = existingTags ? existingTags.find(t => t.type === 'gaawc') : null;
-
-        let configTagId = existingConfigTag ? existingConfigTag.tagId : null;
-
-        if (existingConfigTag) {
-            console.log(`✅ Google Tag exists: ${existingConfigTag.name} (${existingConfigTag.tagId})`);
-        } else {
-            console.log('Creating Google Tag...');
-            try {
-                const newTag = await gtm.createGa4ConfigurationTag('Google Tag', MEASUREMENT_ID, {
-                    sendPageView: true
-                });
-                configTagId = newTag.tagId;
-                console.log(`✅ Created Google Tag: ${newTag.tagId}`);
-            } catch (e) {
-                if (e.code === 400 || e.message.includes('duplicate')) {
-                    console.log('⚠️ Google Tag (or trigger) might already exist. Proceeding...');
-                    // Try to find it again?
-                    const tagsAgain = await gtm.listTags();
-                    const found = tagsAgain.find(t => t.type === 'gaawc');
-                    if (found) configTagId = found.tagId;
-                } else {
-                    throw e;
-                }
-            }
-        }
+        const configTagId = await resolveGa4ConfigTag(gtm, existingTags, existingTriggers, MEASUREMENT_ID, console);
 
         // --- 2. KPI Tags (from setup_kpi_tags.js) ---
         console.log('\n--- Setting up KPIS ---');
 
         // Data Layer Variables
-        const ensureDLV = async (name, dlvName) => {
-            let variable = findEntity(existingVariables, name);
-            if (!variable) {
-                try {
-                    variable = await gtm.createVariable(
-                        name,
-                        'v',
-                        [
-                            { type: 'integer', key: 'dataLayerVersion', value: '2' },
-                            { type: 'boolean', key: 'setDefaultValue', value: 'false' },
-                            { type: 'template', key: 'name', value: dlvName }
-                        ]
-                    );
-                    console.log(`✅ Created Variable '${name}': ${variable.variableId}`);
-                } catch (e) { console.log(`⚠️ Skiping Variable ${name}: ${e.message}`); }
-            } else {
-                console.log(`ℹ️ Using existing Variable '${name}': ${variable.variableId}`);
-            }
-            return variable;
-        };
-
-        const dlvLocationId = await ensureDLV('dlv - location_id', 'location_id');
-        const dlvLocationName = await ensureDLV('dlv - location_name', 'location_name');
-        const dlvInteractionType = await ensureDLV('dlv - interaction_type', 'interaction_type');
-        const dlvSearchTerm = await ensureDLV('dlv - search_term', 'search_term');
+        const dlvLocationId = await ensureDataLayerVariable(gtm, existingVariables, 'dlv - location_id', 'location_id', console);
+        const dlvLocationName = await ensureDataLayerVariable(gtm, existingVariables, 'dlv - location_name', 'location_name', console);
+        const dlvInteractionType = await ensureDataLayerVariable(gtm, existingVariables, 'dlv - interaction_type', 'interaction_type', console);
+        const dlvSearchTerm = await ensureDataLayerVariable(gtm, existingVariables, 'dlv - search_term', 'search_term', console);
 
         // Triggers
-        const ensureTrigger = async (name, eventName) => {
-            let trigger = findEntity(existingTriggers, name);
-            if (!trigger) {
-                try {
-                    trigger = await gtm.createTrigger(
-                        name,
-                        'customEvent',
-                        [{
-                            type: 'equals',
-                            parameter: [
-                                { type: 'template', key: 'arg0', value: '{{_event}}' },
-                                { type: 'template', key: 'arg1', value: eventName }
-                            ]
-                        }]
-                    );
-                    console.log(`✅ Created Trigger '${name}': ${trigger.triggerId}`);
-                } catch (e) {
-                    console.log(`⚠️ Skiping Trigger ${name}: ${e.message}`);
-                    // return dummy or try to find
-                }
-            } else {
-                console.log(`ℹ️ Using existing Trigger '${name}': ${trigger.triggerId}`);
-            }
-            return trigger;
-        };
-
-        const viewLocationTrigger = await ensureTrigger('Event - view_location', 'view_location');
-        const mapInteractionTrigger = await ensureTrigger('Event - map_interaction', 'map_interaction');
-        const searchLocationTrigger = await ensureTrigger('Event - search_location', 'search_location');
-        const generateLeadTrigger = await ensureTrigger('Event - generate_lead', 'generate_lead'); // Common conversion
+        const viewLocationTrigger = await ensureCustomEventTrigger(gtm, existingTriggers, 'Event - view_location', 'view_location', console);
+        const mapInteractionTrigger = await ensureCustomEventTrigger(gtm, existingTriggers, 'Event - map_interaction', 'map_interaction', console);
+        const searchLocationTrigger = await ensureCustomEventTrigger(gtm, existingTriggers, 'Event - search_location', 'search_location', console);
+        const generateLeadTrigger = await ensureCustomEventTrigger(gtm, existingTriggers, 'Event - generate_lead', 'generate_lead', console); // Common conversion
 
         // Tags
-        const ensureEventTag = async (tagName, eventName, triggerId, params = {}) => {
-            if (!triggerId) { console.log(`Skipping tag ${tagName} due to missing trigger`); return; }
-            let tag = findEntity(existingTags, tagName);
-            if (!tag) {
-                try {
-                    await gtm.createGa4EventTag(
-                        tagName,
-                        MEASUREMENT_ID,
-                        eventName,
-                        {
-                            triggerId: triggerId,
-                            configTagId: configTagId, // Link to config tag
-                            eventParameters: params,
-                            resolveVariables: true
-                        }
-                    );
-                    console.log(`✅ Created Tag: ${tagName}`);
-                } catch (e) { console.log(`⚠️ Failed to create tag ${tagName}: ${e.message}`); }
-            } else {
-                console.log(`ℹ️ Tag '${tagName}' already exists.`);
-            }
-        };
-
-        await ensureEventTag('GA4 Event - View Location', 'view_location', viewLocationTrigger.triggerId, {
+        await ensureGa4EventTag(gtm, existingTags, 'GA4 Event - View Location', 'view_location', viewLocationTrigger.triggerId, configTagId, {
             location_id: '{{dlv - location_id}}',
             location_name: '{{dlv - location_name}}'
-        });
+        }, MEASUREMENT_ID, console);
 
-        await ensureEventTag('GA4 Event - Map Interaction', 'map_interaction', mapInteractionTrigger.triggerId, {
+        await ensureGa4EventTag(gtm, existingTags, 'GA4 Event - Map Interaction', 'map_interaction', mapInteractionTrigger.triggerId, configTagId, {
             interaction_type: '{{dlv - interaction_type}}'
-        });
+        }, MEASUREMENT_ID, console);
 
-        await ensureEventTag('GA4 Event - Search Location', 'search_location', searchLocationTrigger.triggerId, {
+        await ensureGa4EventTag(gtm, existingTags, 'GA4 Event - Search Location', 'search_location', searchLocationTrigger.triggerId, configTagId, {
             search_term: '{{dlv - search_term}}'
-        });
+        }, MEASUREMENT_ID, console);
 
-        await ensureEventTag('GA4 Event - Generate Lead', 'generate_lead', generateLeadTrigger.triggerId, {
+        await ensureGa4EventTag(gtm, existingTags, 'GA4 Event - Generate Lead', 'generate_lead', generateLeadTrigger.triggerId, configTagId, {
             location_id: '{{dlv - location_id}}'
-        });
+        }, MEASUREMENT_ID, console);
 
         console.log('\nSetup Complete.');
 
     } catch (error) {
         console.error('Setup failed:', error);
+        process.exitCode = 1;
     }
 }
 

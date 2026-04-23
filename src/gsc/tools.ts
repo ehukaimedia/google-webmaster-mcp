@@ -1,5 +1,5 @@
-import { Tool } from '@modelcontextprotocol/sdk/types.js';
 import { GSCClient } from './client.js';
+import { createToolRegistry, defineTool, jsonResult } from '../mcp/tool-registry.js';
 
 let gscClient: GSCClient | null = null;
 
@@ -10,16 +10,51 @@ async function getClient() {
     return gscClient;
 }
 
-export const GSC_TOOLS: Tool[] = [
-    {
+interface GscAnalyticsQueryArgs {
+    siteUrl: string;
+    startDate: string;
+    endDate: string;
+    dimensions?: string[];
+    rowLimit?: number;
+}
+
+interface GscInspectUrlArgs {
+    siteUrl: string;
+    inspectionUrl: string;
+    languageCode?: string;
+}
+
+interface GscSubmitSitemapArgs {
+    siteUrl: string;
+    feedpath: string;
+}
+
+interface GscSiteUrlArgs {
+    siteUrl: string;
+}
+
+interface GscSitemapExtractArgs {
+    sitemapUrl: string;
+}
+
+interface GscPerformanceOverviewArgs {
+    siteUrl: string;
+    days?: number;
+}
+
+export const GSC_REGISTRY = createToolRegistry([
+    defineTool({
         name: 'gsc_list_sites',
         description: 'List all Google Search Console properties the user has access to.',
         inputSchema: {
             type: 'object',
             properties: {},
         },
-    },
-    {
+    }, async () => {
+        const client = await getClient();
+        return jsonResult(await client.listSites());
+    }),
+    defineTool<GscAnalyticsQueryArgs>({
         name: 'gsc_analytics_query',
         description: 'Query search analytics data (clicks, impressions, CTR, position).',
         inputSchema: {
@@ -37,8 +72,11 @@ export const GSC_TOOLS: Tool[] = [
             },
             required: ['siteUrl', 'startDate', 'endDate'],
         },
-    },
-    {
+    }, async ({ siteUrl, startDate, endDate, dimensions, rowLimit }) => {
+        const client = await getClient();
+        return jsonResult(await client.queryAnalytics(siteUrl, startDate, endDate, dimensions, rowLimit));
+    }),
+    defineTool<GscInspectUrlArgs>({
         name: 'gsc_inspect_url',
         description: 'Inspect a URL to see its indexing status and mobile usability.',
         inputSchema: {
@@ -50,8 +88,11 @@ export const GSC_TOOLS: Tool[] = [
             },
             required: ['siteUrl', 'inspectionUrl'],
         },
-    },
-    {
+    }, async ({ siteUrl, inspectionUrl, languageCode }) => {
+        const client = await getClient();
+        return jsonResult(await client.inspectUrl(siteUrl, inspectionUrl, languageCode));
+    }),
+    defineTool<GscSubmitSitemapArgs>({
         name: 'gsc_sitemaps_submit',
         description: 'Submit a sitemap for a property.',
         inputSchema: {
@@ -62,8 +103,11 @@ export const GSC_TOOLS: Tool[] = [
             },
             required: ['siteUrl', 'feedpath'],
         },
-    },
-    {
+    }, async ({ siteUrl, feedpath }) => {
+        const client = await getClient();
+        return jsonResult(await client.submitSitemap(siteUrl, feedpath));
+    }),
+    defineTool<GscSiteUrlArgs>({
         name: 'gsc_list_sitemaps',
         description: 'List sitemaps submitted for a property.',
         inputSchema: {
@@ -73,19 +117,25 @@ export const GSC_TOOLS: Tool[] = [
             },
             required: ['siteUrl'],
         },
-    },
-    {
+    }, async ({ siteUrl }) => {
+        const client = await getClient();
+        return jsonResult(await client.listSitemaps(siteUrl));
+    }),
+    defineTool<GscSitemapExtractArgs>({
         name: 'gsc_sitemap_extract_urls',
         description: 'Extract all URLs from a sitemap (or sitemap index).',
         inputSchema: {
             type: 'object',
             properties: {
-                sitemapUrl: { type: 'string', description: 'The URL of the sitemap to parse.' },
+                sitemapUrl: { type: 'string', description: 'The public HTTP(S) URL of the sitemap to parse.' },
             },
             required: ['sitemapUrl'],
         },
-    },
-    {
+    }, async ({ sitemapUrl }) => {
+        const client = await getClient();
+        return jsonResult(await client.fetchSitemapUrls(sitemapUrl));
+    }),
+    defineTool<GscPerformanceOverviewArgs>({
         name: 'gsc_get_performance_overview',
         description: 'Get a quick performance overview (clicks, impressions, top pages) for a specific period.',
         inputSchema: {
@@ -96,62 +146,14 @@ export const GSC_TOOLS: Tool[] = [
             },
             required: ['siteUrl'],
         },
-    },
-];
+    }, async ({ siteUrl, days }) => {
+        const client = await getClient();
+        return jsonResult(await client.getPerformanceOverview(siteUrl, days));
+    }),
+]);
 
-export async function handleGscTool(name: string, args: any) {
-    const client = await getClient();
+export const GSC_TOOLS = GSC_REGISTRY.tools;
 
-    switch (name) {
-        case 'gsc_list_sites': {
-            const sites = await client.listSites();
-            return {
-                content: [{ type: 'text', text: JSON.stringify(sites, null, 2) }],
-            };
-        }
-        case 'gsc_analytics_query': {
-            const { siteUrl, startDate, endDate, dimensions, rowLimit } = args;
-            const data = await client.queryAnalytics(siteUrl, startDate, endDate, dimensions, rowLimit);
-            return {
-                content: [{ type: 'text', text: JSON.stringify(data, null, 2) }],
-            };
-        }
-        case 'gsc_inspect_url': {
-            const { siteUrl, inspectionUrl, languageCode } = args;
-            const result = await client.inspectUrl(siteUrl, inspectionUrl, languageCode);
-            return {
-                content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
-            };
-        }
-        case 'gsc_sitemaps_submit': {
-            const { siteUrl, feedpath } = args;
-            const result = await client.submitSitemap(siteUrl, feedpath);
-            return {
-                content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
-            };
-        }
-        case 'gsc_list_sitemaps': {
-            const { siteUrl } = args;
-            const result = await client.listSitemaps(siteUrl);
-            return {
-                content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
-            };
-        }
-        case 'gsc_sitemap_extract_urls': {
-            const { sitemapUrl } = args;
-            const result = await client.fetchSitemapUrls(sitemapUrl);
-            return {
-                content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
-            };
-        }
-        case 'gsc_get_performance_overview': {
-            const { siteUrl, days } = args;
-            const result = await client.getPerformanceOverview(siteUrl, days);
-            return {
-                content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
-            };
-        }
-        default:
-            throw new Error(`Unknown GSC tool: ${name}`);
-    }
+export async function handleGscTool(name: string, args: unknown) {
+    return GSC_REGISTRY.dispatch(name, args);
 }

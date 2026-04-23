@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import 'dotenv/config';
-import { GTMManager } from '../dist/gtm/client.js';
+import { validateWorkspaceCommand } from '../dist/gtm/commands.js';
 
 async function validate() {
     const args = process.argv.slice(2);
@@ -15,11 +15,7 @@ async function validate() {
 
     try {
         console.log(`Validating GTM Workspace for Container: ${gtmId}`);
-        const gtm = new GTMManager();
-        await gtm.initialize();
-        await gtm.findContainer(gtmId);
-
-        const result = await gtm.validateWorkspace();
+        const result = await validateWorkspaceCommand(gtmId);
 
         if (result.ok) {
             console.log('✅ Workspace is valid. No issues found.');

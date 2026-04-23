@@ -1,5 +1,5 @@
-import { Tool } from '@modelcontextprotocol/sdk/types.js';
 import { AnalyticsClient } from './client.js';
+import { createToolRegistry, defineTool, jsonResult } from '../mcp/tool-registry.js';
 
 let analyticsClient: AnalyticsClient | null = null;
 
@@ -10,16 +10,32 @@ async function getClient() {
     return analyticsClient;
 }
 
-export const ANALYTICS_TOOLS: Tool[] = [
-    {
+interface AnalyticsReportArgs {
+    propertyId: string;
+    startDate: string;
+    endDate: string;
+    dimensions?: string[];
+    metrics?: string[];
+    limit?: number;
+}
+
+interface AnalyticsMetadataArgs {
+    propertyId: string;
+}
+
+export const ANALYTICS_REGISTRY = createToolRegistry([
+    defineTool({
         name: 'analytics_list_account_summaries',
         description: 'List account summaries (accounts and properties) accessible to the user.',
         inputSchema: {
             type: 'object',
             properties: {},
         },
-    },
-    {
+    }, async () => {
+        const client = await getClient();
+        return jsonResult(await client.listAccountSummaries());
+    }),
+    defineTool<AnalyticsReportArgs>({
         name: 'analytics_run_report',
         description: 'Run a report on a GA4 property.',
         inputSchema: {
@@ -37,13 +53,21 @@ export const ANALYTICS_TOOLS: Tool[] = [
                     type: 'array',
                     items: { type: 'string' },
                     description: 'List of metric names (e.g., ["eventCount", "activeUsers"])',
+                    minItems: 1,
                 },
                 limit: { type: 'number', description: 'Maximum number of rows to return' },
             },
-            required: ['propertyId', 'startDate', 'endDate'],
+            required: ['propertyId', 'startDate', 'endDate', 'metrics'],
         },
-    },
-    {
+    }, async ({ propertyId, startDate, endDate, dimensions, metrics, limit }) => {
+        const client = await getClient();
+        const dateRanges = [{ startDate, endDate }];
+        const dimObjs = dimensions?.map((dimension) => ({ name: dimension }));
+        const metricObjs = metrics?.map((metric) => ({ name: metric }));
+
+        return jsonResult(await client.runReport(propertyId, dateRanges, dimObjs, metricObjs, limit));
+    }),
+    defineTool<AnalyticsMetadataArgs>({
         name: 'analytics_get_metadata',
         description: 'Get available dimensions and metrics for a GA4 property.',
         inputSchema: {
@@ -53,40 +77,14 @@ export const ANALYTICS_TOOLS: Tool[] = [
             },
             required: ['propertyId'],
         },
-    },
-];
+    }, async ({ propertyId }) => {
+        const client = await getClient();
+        return jsonResult(await client.getMetadata(propertyId));
+    }),
+]);
 
-export async function handleAnalyticsTool(name: string, args: any) {
-    const client = await getClient();
+export const ANALYTICS_TOOLS = ANALYTICS_REGISTRY.tools;
 
-    switch (name) {
-        case 'analytics_list_account_summaries': {
-            const summaries = await client.listAccountSummaries();
-            return {
-                content: [{ type: 'text', text: JSON.stringify(summaries, null, 2) }],
-            };
-        }
-
-        case 'analytics_get_metadata': {
-            const metadata = await client.getMetadata(args.propertyId);
-            return {
-                content: [{ type: 'text', text: JSON.stringify(metadata, null, 2) }],
-            };
-        }
-
-        case 'analytics_run_report': {
-            const { propertyId, startDate, endDate, dimensions, metrics, limit } = args;
-            const dateRanges = [{ startDate, endDate }];
-            const dimObjs = dimensions?.map((d: string) => ({ name: d }));
-            const metObjs = metrics?.map((m: string) => ({ name: m }));
-
-            const report = await client.runReport(propertyId, dateRanges, dimObjs, metObjs, limit);
-            return {
-                content: [{ type: 'text', text: JSON.stringify(report, null, 2) }],
-            };
-        }
-
-        default:
-            throw new Error(`Unknown Analytics tool: ${name}`);
-    }
+export async function handleAnalyticsTool(name: string, args: unknown) {
+    return ANALYTICS_REGISTRY.dispatch(name, args);
 }

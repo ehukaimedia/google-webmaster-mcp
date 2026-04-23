@@ -30,7 +30,7 @@ A Unified Model Context Protocol (MCP) server for managing **Google Tag Manager 
 
 2.  **Install & Build**:
     ```bash
-    npm install
+    npm ci
     npm run build
     ```
 
@@ -65,7 +65,7 @@ Configure your AI client (Cursor, Claude, etc.) to use this server.
 - **Env**: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
 
 **Workflow**:
-The agent will read the `.env` file in your **current project** (e.g., `my-website/.env`) to find `GTM_ID`, `GSC_SITE`, etc., and pass them to the tool.
+Your MCP host must inject `GTM_ID`, `GSC_SITE`, `GA4_PROPERTY_ID`, and related values into the server process. The server does not auto-read a project-local `.env` file for MCP requests.
 
 ### 2. Global CLI Tool Suite
 You can run these tools from **any** directory on your machine.
@@ -74,11 +74,14 @@ You can run these tools from **any** directory on your machine.
 Ensure you have a `.env` file in your **current working directory** with:
 ```env
 GTM_ID=GTM-XXXX
-GSC_SITE=https://example.com
+GTM_WORKSPACE_ID=1234567
 GSC_SITE=https://example.com
 GA4_PROPERTY_ID=123456789
+GA4_MID=G-XXXXXXXXXX
 
 ```
+
+`GTM_WORKSPACE_ID` is optional when the container has a single workspace. If the container has multiple workspaces, set it explicitly so GTM operations target the intended draft.
 
 **Available Commands**:
 
@@ -181,6 +184,14 @@ If you cannot run `google-webmaster-audit`, try reinstalling the package globall
 ```bash
 cd /path/to/google-webmaster-mcp
 npm install -g .
+```
+
+## Development
+
+For local verification:
+```bash
+npm test
+npm run audit:deps
 ```
 
 ## License

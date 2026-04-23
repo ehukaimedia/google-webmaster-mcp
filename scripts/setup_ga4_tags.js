@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import 'dotenv/config';
-import { GTMManager } from '../dist/gtm/client.js';
+import { setupGa4Command } from '../dist/gtm/commands.js';
 
 async function setup() {
     const args = process.argv.slice(2);
@@ -14,143 +14,13 @@ async function setup() {
     }
 
     try {
-        const gtm = new GTMManager();
-        await gtm.initialize();
-        await gtm.findContainer(gtmId);
-
-        // Helper to find existing entity
-        const findEntity = (list, name) => list.find(i => i.name === name);
-
-        // Load existing assets
-        const existingTags = await gtm.listTags();
-        const existingTriggers = await gtm.listTriggers();
-
-        // 0. Enable Built-in Variables
-        console.log('Enabling Built-in Variables...');
-        const variablesToEnable = ['clickText', 'clickUrl', 'clickTarget', 'clickId', 'clickClasses', 'clickElement'];
-        for (const type of variablesToEnable) {
-            try {
-                await gtm.enableBuiltInVariable(type);
-                console.log(`✅ Enabled Built-in Variable: ${type}`);
-            } catch (e) {
-                console.log(`ℹ️ ${type} might already be enabled or failed to enable:`, e.message);
-            }
-        }
-
-        // 1. GA4 Configuration Tag
-        console.log('Checking GA4 Configuration Tag...');
-        let configTag = findEntity(existingTags, 'GA4 Configuration');
-        if (!configTag) {
-            configTag = await gtm.createGa4ConfigurationTag(
-                'GA4 Configuration',
-                measurementId,
-                { triggerType: 'pageview', sendPageView: true }
-            );
-            console.log(`✅ Created Config Tag: ${configTag.tagId}`);
-        } else {
-            console.log(`ℹ️ Using existing Config Tag: ${configTag.tagId}`);
-        }
-
-        // 2. Triggers
-        console.log('\nChecking Triggers...');
-
-        const ensureTrigger = async (name, type, filters) => {
-            let trigger = findEntity(existingTriggers, name);
-            if (!trigger) {
-                trigger = await gtm.createTrigger(name, type, filters);
-                console.log(`✅ Created Trigger '${name}': ${trigger.triggerId}`);
-            } else {
-                console.log(`ℹ️ Using existing Trigger '${name}': ${trigger.triggerId}`);
-            }
-            return trigger;
-        };
-
-        // Custom Event Triggers
-        const leadTrigger = await ensureTrigger('Universal Lead Trigger', 'customEvent', [{
-            type: 'equals',
-            parameter: [
-                { type: 'template', key: 'arg0', value: '{{_event}}' },
-                { type: 'template', key: 'arg1', value: 'generate_lead' }
-            ]
-        }]);
-
-        const linkedinTrigger = await ensureTrigger('Outbound - LinkedIn', 'linkClick', [{
-            type: 'contains',
-            parameter: [
-                { type: 'template', key: 'arg0', value: '{{Click URL}}' },
-                { type: 'template', key: 'arg1', value: 'linkedin.com' }
-            ]
-        }]);
-
-        const mailtoTrigger = await ensureTrigger('Support Intent - Mailto', 'linkClick', [{
-            type: 'contains',
-            parameter: [
-                { type: 'template', key: 'arg0', value: '{{Click URL}}' },
-                { type: 'template', key: 'arg1', value: 'mailto:' }
-            ]
-        }]);
-
-        const telTrigger = await ensureTrigger('Support Intent - Tel', 'linkClick', [{
-            type: 'contains',
-            parameter: [
-                { type: 'template', key: 'arg0', value: '{{Click URL}}' },
-                { type: 'template', key: 'arg1', value: 'tel:' }
-            ]
-        }]);
-
-        // Audit Request Trigger (AI Marketing Update)
-        const auditTrigger = await ensureTrigger('Intent - Request AI Audit', 'linkClick', [{
-            type: 'contains',
-            parameter: [
-                { type: 'template', key: 'arg0', value: '{{Click URL}}' },
-                { type: 'template', key: 'arg1', value: '/contact-us' }
-            ]
-        }]);
-
-        // 3. Event Tags
-        console.log('\nChecking Event Tags...');
-
-        const ensureEventTag = async (tagName, eventName, triggerId, params = {}) => {
-            let tag = findEntity(existingTags, tagName);
-            if (!tag) {
-                await gtm.createGa4EventTag(
-                    tagName,
-                    measurementId,
-                    eventName,
-                    {
-                        triggerId: triggerId,
-                        eventParameters: params
-                    }
-                );
-                console.log(`✅ Created Tag: ${tagName}`);
-            } else {
-                console.log(`ℹ️ Tag '${tagName}' already exists.`);
-            }
-        };
-
-        await ensureEventTag('GA4 - Lead Generation', 'generate_lead', leadTrigger.triggerId);
-
-
-        await ensureEventTag('GA4 - Click LinkedIn', 'click', linkedinTrigger.triggerId, {
-            link_url: '{{Click URL}}',
-            outbound: true,
-            outbound_dest: 'linkedin'
-        });
-
-        await ensureEventTag('GA4 - Contact Email', 'contact', mailtoTrigger.triggerId, {
-            method: 'email'
-        });
-
-        await ensureEventTag('GA4 - Contact Phone', 'contact', telTrigger.triggerId, {
-            method: 'phone'
-        });
-
-        // AI Audit Conversion Tag
-        await ensureEventTag('GA4 - Intent - AI Audit', 'generate_lead', auditTrigger.triggerId, {
-            method: 'form_start',
-            lead_type: 'ai_audit'
-        });
-
+        const summary = await setupGa4Command(gtmId, measurementId);
+        console.log('Built-in variables enabled:', summary.enabledBuiltInVariables.length ? summary.enabledBuiltInVariables.join(', ') : 'none');
+        console.log('Built-in variables reused:', summary.reusedBuiltInVariables.length ? summary.reusedBuiltInVariables.join(', ') : 'none');
+        console.log('Triggers created:', summary.createdTriggers.length ? summary.createdTriggers.join(', ') : 'none');
+        console.log('Triggers reused:', summary.reusedTriggers.length ? summary.reusedTriggers.join(', ') : 'none');
+        console.log('Tags created:', summary.createdTags.length ? summary.createdTags.join(', ') : 'none');
+        console.log('Tags reused:', summary.reusedTags.length ? summary.reusedTags.join(', ') : 'none');
     } catch (error) {
         console.error('Setup failed:', error);
         process.exit(1);
