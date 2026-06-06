@@ -10,6 +10,7 @@ Related artifacts:
 - Plan: `docs/plans/google-webmaster-mcp-oss-npm-publish-readiness.md`
 - Primary audit: `docs/code-reviews/codex-google-webmaster-mcp-oss-audit-2026-06-06.md`
 - Independent verification audit: `docs/code-reviews/claude-google-webmaster-mcp-oss-audit-verification-2026-06-06.md`
+- Artifact custodial audit: `docs/code-reviews/claude-google-webmaster-mcp-oss-artifacts-audit-2026-06-06.md`
 - Existing codebase flow playground: `docs/playgrounds/codebase_playground.html`
 
 ## Intent
@@ -42,14 +43,15 @@ These facts were checked on 2026-06-06:
 | Secret exposure | `docs/code-reviews/claude-google-webmaster-mcp-oss-audit-verification-2026-06-06.md:69` |
 | Publish tarball risk | `docs/code-reviews/claude-google-webmaster-mcp-oss-audit-verification-2026-06-06.md:100` |
 | Quarantine-compliant axios fix | `docs/code-reviews/claude-google-webmaster-mcp-oss-audit-verification-2026-06-06.md:127` |
-| Current package bins | `package.json:12` |
-| Current axios pin | `package.json:46` |
+| Artifact smoke-test correction | `docs/code-reviews/claude-google-webmaster-mcp-oss-artifacts-audit-2026-06-06.md` |
+| Current package bins | `package.json` key `bin` (committed HEAD line differs from dirty worktree line) |
+| Current axios pin | `package.json` key `dependencies.axios` (committed HEAD line differs from dirty worktree line) |
 | Current CI gates | `.github/workflows/ci.yml:21` |
 | Token permission risk | `src/auth/auth.ts:9` and `src/auth/auth.ts:65` |
 | SEO fetch guardrail gap | `scripts/audit-cli.mjs:47` and `scripts/audit-cli.mjs:61` |
 | Internal hardcoded GTM setup script | `scripts/setup_webmaster_fixed.js:11` |
 | Destructive cleanup script | `scripts/cleanup_gtm.js:6` and `scripts/cleanup_gtm.js:47` |
-| Agnostic MCP config direction | `mcp-config.json:4` |
+| MCP config drift | `mcp-config.json` key `mcpServers.google-webmaster.command` (committed HEAD still uses a machine path; dirty worktree points at `npx`) |
 
 ## Product Contract
 
@@ -111,6 +113,7 @@ Required state:
 - `scripts/setup_webmaster_fixed.js` and `scripts/cleanup_gtm.js` are not shipped as accidental public surface.
 - A CI/prepublish guard fails if dangerous files appear in `npm pack`.
 - `npm pack --dry-run` and a local global install from the generated tarball pass.
+- Tarball smoke tests verify bin existence, executable shims, and MCP server startup using an MCP stdio handshake or bounded timeout. They must not rely on `google-webmaster-mcp --help` until that CLI contract exists.
 
 ### Gate 3: Security and Runtime Guardrails
 
@@ -123,6 +126,7 @@ Required state:
 - Token profile names are restricted to a conservative filename-safe pattern.
 - `seo-audit` fetches use timeout, content-length/body-size caps, and content-type checks.
 - Destructive GTM operations require explicit confirmation or dry-run-first workflows.
+- Public headless commands provide deterministic `--help` and `--version` behavior. If the MCP stdio server accepts these flags, it must print and exit before opening stdio transport.
 - Tests cover the new auth/profile and fetch guardrails.
 
 ### Gate 4: Dependency Hygiene
@@ -190,14 +194,10 @@ npm pack --json
 Minimum tarball smoke test:
 
 ```sh
-tmpdir="$(mktemp -d)"
-pkg="$(npm pack --silent)"
-npm install -g "$PWD/$pkg" --prefix "$tmpdir"
-"$tmpdir/bin/google-webmaster-mcp" --help
-"$tmpdir/bin/google-webmaster-mcp-auth" --help
-"$tmpdir/bin/seo-audit" --help
-rm -rf "$tmpdir" "$pkg"
+npm run smoke:tarball
 ```
+
+The tarball smoke script must install the generated package into a temporary prefix, assert every declared `bin` target exists and is executable, verify `google-webmaster-mcp-auth --help`, verify `seo-audit --help` after the CLI help contract is implemented, and exercise `google-webmaster-mcp` with an MCP stdio initialize handshake or bounded startup probe. It must not pass by hanging, EOF-exiting, or ignoring `--help`.
 
 Minimum publication readiness checks:
 

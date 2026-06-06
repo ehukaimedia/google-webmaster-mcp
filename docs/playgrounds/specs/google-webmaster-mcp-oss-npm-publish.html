@@ -398,7 +398,9 @@
 
       <div class="section">
         <h2>Spec Seed</h2>
-        <p class="small">Use the generated prompt to ask an agent for the next PR while keeping the release gates in scope.</p>
+        <p class="small">Current: private repo, unclaimed npm name, dirty-worktree improvements, and release-blocking secret/package/security findings.</p>
+        <p class="small">Target: agnostic global npm CLI/MCP package with clean history, scoped tarball, deterministic smoke tests, OSS health files, website operator migration, and post-release monitoring.</p>
+        <p class="small">Acceptance: rotate credentials, purge history, pass CI, run `npm run smoke:tarball`, publish from a clean tagged commit, then verify global install.</p>
       </div>
     </aside>
 
@@ -446,7 +448,8 @@
               <tr><td>Secret exposure</td><td>docs/code-reviews/claude-google-webmaster-mcp-oss-audit-verification-2026-06-06.md:69</td></tr>
               <tr><td>npm tarball risk</td><td>docs/code-reviews/claude-google-webmaster-mcp-oss-audit-verification-2026-06-06.md:100</td></tr>
               <tr><td>Axios fix</td><td>docs/code-reviews/claude-google-webmaster-mcp-oss-audit-verification-2026-06-06.md:127</td></tr>
-              <tr><td>Current package bins</td><td>package.json:12</td></tr>
+              <tr><td>Artifact smoke-test correction</td><td>docs/code-reviews/claude-google-webmaster-mcp-oss-artifacts-audit-2026-06-06.md</td></tr>
+              <tr><td>Current package bins</td><td>package.json key: bin (line differs between HEAD and dirty worktree)</td></tr>
               <tr><td>Current CI gates</td><td>.github/workflows/ci.yml:21</td></tr>
             </tbody>
           </table>
@@ -457,6 +460,14 @@
 
   <script>
     const gates = [
+      {
+        id: "coordination",
+        title: "Release coordination clear",
+        detail: "Confirm release branch, PR topology, npm publisher, license, and history rewrite window before implementation.",
+        lane: "Release",
+        phase: 0,
+        critical: false
+      },
       {
         id: "secrets",
         title: "Credential history clean",
@@ -516,7 +527,7 @@
       {
         id: "ci",
         title: "CI release gates enforced",
-        detail: "Run build, tests, audit, secret scan, pack-surface guard, and global tarball install smoke test on PRs.",
+        detail: "Run build, tests, audit, secret scan, pack-surface guard, and a tarball smoke test that uses MCP handshake or bounded startup.",
         lane: "Release",
         phase: 6,
         critical: true
@@ -536,10 +547,19 @@
         lane: "Release",
         phase: 8,
         critical: true
+      },
+      {
+        id: "monitoring",
+        title: "Post-release monitoring active",
+        detail: "Watch install reports and issues, verify npx MCP examples, and track non-blocking follow-ups outside active docs.",
+        lane: "Release",
+        phase: 9,
+        critical: false
       }
     ];
 
     const phases = [
+      { id: 0, title: "Release Coordination", lane: "Release", color: "var(--release)" },
       { id: 1, title: "Credential Incident Response", lane: "Security", color: "var(--security)" },
       { id: 2, title: "Package Contract", lane: "Package", color: "var(--package)" },
       { id: 3, title: "Security Hardening", lane: "Security", color: "var(--security)" },
@@ -547,7 +567,8 @@
       { id: 5, title: "Website Compatibility", lane: "Compatibility", color: "var(--compat)" },
       { id: 6, title: "CI Gates", lane: "Release", color: "var(--release)" },
       { id: 7, title: "Public GitHub", lane: "Release", color: "var(--release)" },
-      { id: 8, title: "npm Publish", lane: "Release", color: "var(--release)" }
+      { id: 8, title: "npm Publish", lane: "Release", color: "var(--release)" },
+      { id: 9, title: "Post-Release Monitoring", lane: "Release", color: "var(--release)" }
     ];
 
     const presets = [
@@ -555,7 +576,7 @@
       { id: "security", label: "Security First", checked: ["secrets", "deps", "runtime"] },
       { id: "package", label: "Package PR", checked: ["surface", "deps", "ci"] },
       { id: "docs", label: "OSS Docs", checked: ["ossDocs", "docsFresh"] },
-      { id: "compat", label: "Website Migration", checked: ["website"] },
+      { id: "compat", label: "Website Migration", checked: ["coordination", "website"] },
       { id: "release", label: "Ready State", checked: gates.map((gate) => gate.id) }
     ];
 
@@ -688,6 +709,7 @@
         "- docs/playgrounds/specs/google-webmaster-mcp-oss-npm-publish.html",
         "- docs/code-reviews/codex-google-webmaster-mcp-oss-audit-2026-06-06.md",
         "- docs/code-reviews/claude-google-webmaster-mcp-oss-audit-verification-2026-06-06.md",
+        "- docs/code-reviews/claude-google-webmaster-mcp-oss-artifacts-audit-2026-06-06.md",
         "",
         "Current selected completed gates:",
         selected.length ? selected.map((gate) => `- ${gate.title}`).join("\n") : "- None selected yet.",
@@ -698,6 +720,7 @@
         "Non-negotiables:",
         "- Treat committed state as truth, not dirty worktree state.",
         "- Do not make GitHub public or run npm publish until credentials are rotated, history is purged, and npm pack is clean.",
+        "- Use a tarball smoke test that verifies bin executability and MCP stdio startup; do not rely on google-webmaster-mcp --help until that CLI contract exists.",
         "- Preserve stable public binaries until ehukaimedia_website operator references are migrated.",
         "- Keep the package agnostic; no Ehukai-only runtime dependency or hardcoded GTM identifiers in public package surface."
       ].join("\n");

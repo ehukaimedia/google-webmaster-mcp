@@ -7,7 +7,7 @@ Status: Draft execution plan
 Related artifacts:
 - Spec: `docs/specs/google-webmaster-mcp-oss-npm-publish-readiness.md`
 - Playground: `docs/playgrounds/specs/google-webmaster-mcp-oss-npm-publish.html`
-- Audits: `docs/code-reviews/codex-google-webmaster-mcp-oss-audit-2026-06-06.md` and `docs/code-reviews/claude-google-webmaster-mcp-oss-audit-verification-2026-06-06.md`
+- Audits: `docs/code-reviews/codex-google-webmaster-mcp-oss-audit-2026-06-06.md`, `docs/code-reviews/claude-google-webmaster-mcp-oss-audit-verification-2026-06-06.md`, and `docs/code-reviews/claude-google-webmaster-mcp-oss-artifacts-audit-2026-06-06.md`
 
 ## Goal
 
@@ -92,6 +92,7 @@ Tasks:
 - Exclude `scripts/setup_webmaster_fixed.js`, `scripts/cleanup_gtm.js`, and other undocumented internal scripts from the tarball.
 - Add a package-surface guard that fails when secrets, internal scripts, missing `dist/`, or broken `bin` targets are detected.
 - Add `prepack` or `prepublishOnly` behavior that builds and validates before publish.
+- Add `npm run smoke:tarball`: install the packed artifact into a temporary prefix, verify every declared `bin` target exists and is executable, and exercise `google-webmaster-mcp` through an MCP stdio initialize handshake or bounded startup probe rather than `--help`.
 - Add tarball install smoke tests to CI.
 
 Verification:
@@ -105,13 +106,7 @@ npm pack --json
 Tarball smoke:
 
 ```sh
-tmpdir="$(mktemp -d)"
-pkg="$(npm pack --silent)"
-npm install -g "$PWD/$pkg" --prefix "$tmpdir"
-"$tmpdir/bin/google-webmaster-mcp" --help
-"$tmpdir/bin/google-webmaster-mcp-auth" --help
-"$tmpdir/bin/seo-audit" --help
-rm -rf "$tmpdir" "$pkg"
+npm run smoke:tarball
 ```
 
 Exit criteria:
@@ -119,6 +114,7 @@ Exit criteria:
 - Every `bin` target resolves.
 - The tarball includes `dist/`.
 - The tarball excludes secrets, `.env`, token files, tests, and internal destructive scripts.
+- The MCP server smoke test cannot pass by hanging, EOF-exiting, or ignoring `--help`.
 
 ## Phase 3: Dependency and Security Hardening
 
@@ -132,6 +128,7 @@ Tasks:
 - Harden `scripts/audit-cli.mjs` with timeout, content-type allowlist, content-length/body-size caps, and negative tests.
 - Add tests for unsafe profile names, token permissions, request timeout, oversized body, and unsupported content type.
 - Ensure destructive GTM workflows are dry-run-first or explicitly confirmed.
+- Add deterministic `--help` and `--version` behavior for public headless commands. If `google-webmaster-mcp` accepts these flags, it must print and exit before opening stdio transport.
 
 Verification:
 
@@ -147,6 +144,7 @@ Exit criteria:
 - Dependency audit exits 0.
 - Security tests pass.
 - No public CLI can hang indefinitely on a slow SEO audit target.
+- Public help/version commands exit 0 and do not start long-running transports.
 - Token storage is private by default.
 
 ## Phase 4: Agnostic Public UX and Docs
@@ -219,6 +217,7 @@ npm run build
 npm test
 npm run audit:deps
 npm pack --dry-run
+npm run smoke:tarball
 ```
 
 Exit criteria:
@@ -270,7 +269,7 @@ npm publish --dry-run
 npm publish
 npm view google-webmaster-mcp version --json
 npm install -g google-webmaster-mcp
-google-webmaster-mcp --help
+google-webmaster-mcp --version
 seo-audit --help
 ```
 
