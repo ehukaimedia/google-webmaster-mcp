@@ -15,6 +15,7 @@ Green means:
 - The npm package contains only supported runtime, CLI, docs, and examples.
 - Public repo-health files are complete and accurate.
 - README, examples, workflow docs, and architecture playgrounds describe the current supported path without stale operational advice.
+- Known dogfood consumers, especially `ehukaimedia_website`, are migrated to stable public CLI commands instead of sibling-repo internals.
 - Release notes/changelog and version metadata are ready for a SemVer npm publish.
 
 ## Verdict
@@ -134,6 +135,33 @@ Docs that teach unsafe sequencing or incomplete setup create real operational fa
 Fix:
 Update README, `.env.example`, and workflow docs from the current source of truth. Add the GTM rate-limit sequence, clarify global auth config versus per-project context env, and fix stale phase numbering.
 
+## Downstream Compatibility: `ehukaimedia_website`
+
+Compatibility verdict: making `google-webmaster-mcp` agnostic should not break live `ehukaimedia_website` application services, but it can break local operator workflows unless the website repo is migrated off sibling-repo internals first.
+
+Evidence:
+- `ehukaimedia_website` does not import `google-webmaster-mcp` at application runtime.
+- The website embeds GTM directly in `app/root.tsx:71` and loads GTM from that local constant.
+- The website SEO audit tool uses its own implementation in `app/utils/audit-checks.ts:21`; it does not shell out to the MCP package.
+- The chat lead flow pushes `generate_lead` to `window.dataLayer` in `app/components/chat-widget.tsx:271`.
+- The contact page pushes `contact_submit` and `booking_intent` in `app/routes/contact-us.tsx:502` and `app/routes/contact-us.tsx:717`.
+- The only direct executable coupling found in the website package is `package.json:22`: `gtm:setup` runs `node ../Google-Webmaster-MCP/scripts/setup_ga4_tags.js`.
+- The website-local skill at `skills/google-webmaster-mcp/SKILL.md:83-85` also points at `setup_kpi_tags.js` by absolute path.
+- The global skill at `/Users/ehukaimedia/.codex/skills/google-webmaster-mcp/SKILL.md` is mostly agnostic already: it expects a project-local `.env`, stable `google-webmaster-*` binaries, and standard `GTM_ID`, `GSC_SITE`, `GA4_PROPERTY_ID`, and `GA4_MID` variables.
+
+Safe agnostic changes:
+- Remove `scripts/setup_webmaster_fixed.js` and `scripts/cleanup_gtm.js` from the public npm package. No website call sites reference them.
+- Remove Ehukai branding from generic CLI text and user agents, provided the command names and JSON output shape remain stable.
+- Keep `generate_lead` as a generic baseline conversion event, because the website and skill guidance still rely on that event contract.
+
+Migration required before deleting or moving scripts:
+- Change `ehukaimedia_website` `npm run gtm:setup` to use `google-webmaster-setup-ga4` instead of `../Google-Webmaster-MCP/scripts/setup_ga4_tags.js`.
+- Update the website-local `skills/google-webmaster-mcp/SKILL.md` to use stable public commands or a website-owned private helper for KPI presets.
+- Move Ehukai-specific GTM presets such as `/contact-us`, `Intent - Request AI Audit`, `ai_audit`, and location/map KPI tags out of the generic MCP package and into website-owned docs/config.
+
+Compatibility rule for implementation PRs:
+Preserve the stable public binaries (`google-webmaster-audit`, `google-webmaster-submit-sitemap`, `google-webmaster-gtm-validate`, `google-webmaster-setup-ga4`, `google-webmaster-gtm-publish`, `seo-audit`) until `ehukaimedia_website` has been migrated and verified. If a command must be renamed or removed, land the website migration first.
+
 ## Positive Signals
 
 - `npm test` passed 53/53 tests after a clean TypeScript build.
@@ -141,6 +169,7 @@ Update README, `.env.example`, and workflow docs from the current source of trut
 - CI has least-privilege `contents: read` permissions and runs `npm ci`, build, tests, and dependency audit.
 - `npm pack --dry-run` completed and showed the core `dist` and CLI files are present.
 - `docs/playgrounds/codebase_playground.html` exists, satisfying the repo's local architecture-playground convention at a basic level.
+- `ehukaimedia_website` uses this project as an operational/dogfood tool, not as a runtime service dependency.
 
 ## Verification Evidence
 
@@ -154,6 +183,9 @@ Commands run:
 - `npm ls --depth=0`
 - `npm view <package>@<version> time --json` for dependency age checks
 - `git ls-files -z | xargs -0 rg -n <secret-patterns>`
+- Searched `ehukaimedia_website` for `Google-Webmaster-MCP`, `google-webmaster-*`, `setup_ga4_tags`, `setup_kpi_tags`, `cleanup_gtm`, `GTM_ID`, `GSC_SITE`, `GA4_PROPERTY_ID`, `GA4_MID`, `dataLayer`, and `generate_lead`.
+- Read `/Users/ehukaimedia/.codex/skills/google-webmaster-mcp/SKILL.md` to compare the global operating skill against the proposed agnostic package surface.
+- Reviewed Claude's independent verification audit commit `5b334fe`, which adds `docs/code-reviews/claude-google-webmaster-mcp-oss-audit-verification-2026-06-06.md`.
 
 Results:
 - Build: passed during `npm test` pretest.
@@ -170,8 +202,9 @@ Results:
 3. Lock down token-file permissions and profile-name handling.
 4. Add fetch timeout/body-size guardrails to `seo-audit`.
 5. Shrink the published package surface to supported CLI/MCP artifacts only.
-6. Add missing OSS health files and real package metadata.
-7. Refresh README, `.env.example`, and workflow docs so active docs match current safe operations.
+6. Migrate `ehukaimedia_website` operator scripts/skills from sibling-repo internals to stable public binaries.
+7. Add missing OSS health files and real package metadata.
+8. Refresh README, `.env.example`, and workflow docs so active docs match current safe operations.
 
 ## PR Intent
 
