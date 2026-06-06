@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Google Webmaster MCP OSS + npm Publish Playground</title>
+  <meta name="description" content="Interactive release-readiness playground for publishing Google Webmaster MCP as open source and a global npm package.">
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #101319;
+      --panel: #171d25;
+      --panel-2: #1d2530;
+      --panel-3: #232d39;
+      --line: #354253;
+      --text: #edf2f7;
+      --muted: #aab5c3;
+      --dim: #7d8998;
+      --security: #ef6f6c;
+      --package: #5fb6e5;
+      --oss: #74c69d;
+      --compat: #f4b860;
+      --release: #b98cff;
+      --ok: #80d39b;
+      --warn: #f7c65f;
+      --bad: #ef6f6c;
+      --shadow: 0 18px 55px rgba(0, 0, 0, 0.32);
+      --radius: 8px;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    button, input, textarea, select {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(290px, 360px) minmax(0, 1fr);
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      border-right: 1px solid var(--line);
+      background: #151a22;
+      padding: 24px;
+      overflow: auto;
+    }
+
+    .main {
+      padding: 24px;
+      overflow: auto;
+    }
+
+    h1, h2, h3, p {
+      margin-top: 0;
+    }
+
+    h1 {
+      font-size: 22px;
+      line-height: 1.2;
+      margin-bottom: 8px;
+    }
+
+    h2 {
+      font-size: 15px;
+      margin: 0 0 12px;
+      color: var(--text);
+    }
+
+    h3 {
+      font-size: 14px;
+      margin: 0 0 8px;
+    }
+
+    p, li {
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 14px;
+    }
+
+    code {
+      color: #d9ecff;
+      background: #11161d;
+      border: 1px solid #2d3948;
+      border-radius: 5px;
+      padding: 1px 5px;
+    }
+
+    .small {
+      font-size: 12px;
+      color: var(--dim);
+    }
+
+    .section {
+      border-top: 1px solid var(--line);
+      padding-top: 18px;
+      margin-top: 18px;
+    }
+
+    .preset-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .preset {
+      border: 1px solid var(--line);
+      background: var(--panel-2);
+      color: var(--text);
+      border-radius: var(--radius);
+      min-height: 40px;
+      padding: 8px 10px;
+    }
+
+    .preset.active {
+      outline: 2px solid var(--package);
+      border-color: transparent;
+    }
+
+    .checklist {
+      display: grid;
+      gap: 8px;
+    }
+
+    .check {
+      display: grid;
+      grid-template-columns: 18px 1fr;
+      gap: 10px;
+      align-items: start;
+      padding: 10px;
+      border: 1px solid var(--line);
+      background: var(--panel-2);
+      border-radius: var(--radius);
+    }
+
+    .check input {
+      width: 16px;
+      height: 16px;
+      margin-top: 2px;
+      accent-color: var(--package);
+    }
+
+    .check strong {
+      display: block;
+      font-size: 13px;
+      margin-bottom: 2px;
+    }
+
+    .check span {
+      display: block;
+      color: var(--dim);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(240px, 0.8fr);
+      gap: 18px;
+      align-items: stretch;
+      margin-bottom: 18px;
+    }
+
+    .hero-panel,
+    .summary-panel,
+    .board,
+    .prompt-panel,
+    .anchors {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .hero-panel,
+    .summary-panel,
+    .prompt-panel,
+    .anchors {
+      padding: 18px;
+    }
+
+    .status-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .pill {
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: #11161d;
+      padding: 7px 10px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .pill.good {
+      border-color: rgba(128, 211, 155, 0.55);
+      color: var(--ok);
+    }
+
+    .pill.warn {
+      border-color: rgba(247, 198, 95, 0.55);
+      color: var(--warn);
+    }
+
+    .pill.bad {
+      border-color: rgba(239, 111, 108, 0.55);
+      color: var(--bad);
+    }
+
+    .score {
+      display: grid;
+      gap: 10px;
+    }
+
+    .meter {
+      height: 14px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: #0d1117;
+      border: 1px solid var(--line);
+    }
+
+    .meter span {
+      display: block;
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--bad), var(--warn), var(--ok));
+      transition: width 160ms ease;
+    }
+
+    .board {
+      padding: 16px;
+      margin-bottom: 18px;
+    }
+
+    .phase-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(180px, 1fr));
+      gap: 12px;
+    }
+
+    .phase {
+      min-height: 150px;
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+      border-left: 5px solid var(--line);
+      border-radius: var(--radius);
+      padding: 12px;
+      display: grid;
+      align-content: start;
+      gap: 8px;
+    }
+
+    .phase.complete {
+      border-color: rgba(128, 211, 155, 0.42);
+      border-left-color: var(--ok);
+    }
+
+    .phase.blocked {
+      border-color: rgba(239, 111, 108, 0.45);
+      border-left-color: var(--bad);
+    }
+
+    .phase.partial {
+      border-color: rgba(247, 198, 95, 0.45);
+      border-left-color: var(--warn);
+    }
+
+    .phase .tag {
+      display: inline-flex;
+      width: fit-content;
+      font-size: 11px;
+      color: var(--muted);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 3px 7px;
+    }
+
+    .phase ul {
+      margin: 0;
+      padding-left: 18px;
+    }
+
+    .phase li {
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .details-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 18px;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 260px;
+      resize: vertical;
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      background: #0d1117;
+      color: var(--text);
+      padding: 12px;
+      line-height: 1.45;
+      font-size: 13px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    .copy-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .copy {
+      background: var(--package);
+      color: #06111a;
+      border: 0;
+      border-radius: var(--radius);
+      min-height: 36px;
+      padding: 8px 12px;
+      font-weight: 700;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    th, td {
+      border-bottom: 1px solid var(--line);
+      padding: 8px 6px;
+      text-align: left;
+      vertical-align: top;
+      color: var(--muted);
+    }
+
+    th {
+      color: var(--text);
+      font-weight: 700;
+    }
+
+    @media (max-width: 980px) {
+      .layout,
+      .hero,
+      .details-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .phase-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Intent: target-contract playground for making Google Webmaster MCP public OSS and a global npm package without stale regression context. -->
+  <div class="layout">
+    <aside class="sidebar">
+      <h1>OSS + npm Readiness</h1>
+      <p>This playground turns the audit findings into an implementation contract for publishing `google-webmaster-mcp` safely.</p>
+
+      <div class="section">
+        <h2>Presets</h2>
+        <div class="preset-grid" id="presets"></div>
+      </div>
+
+      <div class="section">
+        <h2>Gate State</h2>
+        <div class="checklist" id="checks"></div>
+      </div>
+
+      <div class="section">
+        <h2>Spec Seed</h2>
+        <p class="small">Use the generated prompt to ask an agent for the next PR while keeping the release gates in scope.</p>
+      </div>
+    </aside>
+
+    <main class="main">
+      <section class="hero">
+        <div class="hero-panel">
+          <h1>Publish only when the committed repo, GitHub remote, and npm tarball are all green.</h1>
+          <p>The target package is agnostic: any authorized Google account can use the MCP server and CLI commands. Ehukai Media website workflows are dogfood consumers, not runtime dependencies.</p>
+          <div class="status-row" id="statusPills"></div>
+        </div>
+        <div class="summary-panel">
+          <h2>Readiness Score</h2>
+          <div class="score">
+            <div class="meter" aria-label="Readiness score"><span id="meter"></span></div>
+            <p id="scoreText">0 of 0 gates complete.</p>
+            <p class="small" id="blockerText"></p>
+          </div>
+        </div>
+      </section>
+
+      <section class="board">
+        <h2>Critical Path</h2>
+        <div class="phase-grid" id="phaseGrid"></div>
+      </section>
+
+      <section class="details-grid">
+        <div class="prompt-panel">
+          <div class="copy-row">
+            <h2>Generated Agent Prompt</h2>
+            <button class="copy" id="copyPrompt" type="button">Copy</button>
+          </div>
+          <textarea id="prompt" spellcheck="false"></textarea>
+        </div>
+
+        <div class="anchors">
+          <h2>Source Anchors</h2>
+          <table>
+            <thead>
+              <tr><th>Claim</th><th>Anchor</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Audit green criteria</td><td>docs/code-reviews/codex-google-webmaster-mcp-oss-audit-2026-06-06.md:12</td></tr>
+              <tr><td>Website compatibility</td><td>docs/code-reviews/codex-google-webmaster-mcp-oss-audit-2026-06-06.md:138</td></tr>
+              <tr><td>Committed state mismatch</td><td>docs/code-reviews/claude-google-webmaster-mcp-oss-audit-verification-2026-06-06.md:39</td></tr>
+              <tr><td>Secret exposure</td><td>docs/code-reviews/claude-google-webmaster-mcp-oss-audit-verification-2026-06-06.md:69</td></tr>
+              <tr><td>npm tarball risk</td><td>docs/code-reviews/claude-google-webmaster-mcp-oss-audit-verification-2026-06-06.md:100</td></tr>
+              <tr><td>Axios fix</td><td>docs/code-reviews/claude-google-webmaster-mcp-oss-audit-verification-2026-06-06.md:127</td></tr>
+              <tr><td>Current package bins</td><td>package.json:12</td></tr>
+              <tr><td>Current CI gates</td><td>.github/workflows/ci.yml:21</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const gates = [
+      {
+        id: "secrets",
+        title: "Credential history clean",
+        detail: "Rotate/revoke historical OAuth secrets, purge history once, force-push sanitized branches, and add secret scanning.",
+        lane: "Security",
+        phase: 1,
+        critical: true
+      },
+      {
+        id: "surface",
+        title: "npm package surface locked",
+        detail: "Commit files allowlist, include dist/bin targets, exclude secrets and internal destructive scripts, add pack guard.",
+        lane: "Package",
+        phase: 2,
+        critical: true
+      },
+      {
+        id: "deps",
+        title: "Dependency audit green",
+        detail: "Bump axios from 1.15.2 to a patched quarantine-compliant release such as 1.16.1 and commit lockfile.",
+        lane: "Security",
+        phase: 3,
+        critical: true
+      },
+      {
+        id: "runtime",
+        title: "Runtime guardrails hardened",
+        detail: "Use private token permissions, sanitize profiles, add SEO fetch timeout/body/content-type limits, test negative paths.",
+        lane: "Security",
+        phase: 3,
+        critical: true
+      },
+      {
+        id: "ossDocs",
+        title: "OSS health files complete",
+        detail: "Add LICENSE, CONTRIBUTING, SECURITY, CODE_OF_CONDUCT, CHANGELOG, AGENTS, templates, and package metadata.",
+        lane: "OSS",
+        phase: 4,
+        critical: false
+      },
+      {
+        id: "docsFresh",
+        title: "Active docs current",
+        detail: "Fix README, .env.example, workflow rate limits, stale GMB references, placeholder clone URLs, and private paths.",
+        lane: "OSS",
+        phase: 4,
+        critical: false
+      },
+      {
+        id: "website",
+        title: "Website operator migration",
+        detail: "Move ehukaimedia_website script and skill references off sibling-repo internals while preserving public binaries.",
+        lane: "Compatibility",
+        phase: 5,
+        critical: false
+      },
+      {
+        id: "ci",
+        title: "CI release gates enforced",
+        detail: "Run build, tests, audit, secret scan, pack-surface guard, and global tarball install smoke test on PRs.",
+        lane: "Release",
+        phase: 6,
+        critical: true
+      },
+      {
+        id: "github",
+        title: "GitHub public release ready",
+        detail: "Merge clean release branch, tag sanitized commit, flip visibility only after all gates pass.",
+        lane: "Release",
+        phase: 7,
+        critical: true
+      },
+      {
+        id: "npm",
+        title: "npm publish verified",
+        detail: "Publish from clean tagged commit, verify npm metadata, global install, and MCP npx path.",
+        lane: "Release",
+        phase: 8,
+        critical: true
+      }
+    ];
+
+    const phases = [
+      { id: 1, title: "Credential Incident Response", lane: "Security", color: "var(--security)" },
+      { id: 2, title: "Package Contract", lane: "Package", color: "var(--package)" },
+      { id: 3, title: "Security Hardening", lane: "Security", color: "var(--security)" },
+      { id: 4, title: "OSS Docs", lane: "OSS", color: "var(--oss)" },
+      { id: 5, title: "Website Compatibility", lane: "Compatibility", color: "var(--compat)" },
+      { id: 6, title: "CI Gates", lane: "Release", color: "var(--release)" },
+      { id: 7, title: "Public GitHub", lane: "Release", color: "var(--release)" },
+      { id: 8, title: "npm Publish", lane: "Release", color: "var(--release)" }
+    ];
+
+    const presets = [
+      { id: "baseline", label: "Baseline", checked: [] },
+      { id: "security", label: "Security First", checked: ["secrets", "deps", "runtime"] },
+      { id: "package", label: "Package PR", checked: ["surface", "deps", "ci"] },
+      { id: "docs", label: "OSS Docs", checked: ["ossDocs", "docsFresh"] },
+      { id: "compat", label: "Website Migration", checked: ["website"] },
+      { id: "release", label: "Ready State", checked: gates.map((gate) => gate.id) }
+    ];
+
+    const state = {
+      checked: new Set(),
+      preset: "baseline"
+    };
+
+    const checksEl = document.querySelector("#checks");
+    const presetsEl = document.querySelector("#presets");
+    const statusPillsEl = document.querySelector("#statusPills");
+    const meterEl = document.querySelector("#meter");
+    const scoreTextEl = document.querySelector("#scoreText");
+    const blockerTextEl = document.querySelector("#blockerText");
+    const phaseGridEl = document.querySelector("#phaseGrid");
+    const promptEl = document.querySelector("#prompt");
+    const copyButton = document.querySelector("#copyPrompt");
+
+    function setPreset(presetId) {
+      const preset = presets.find((item) => item.id === presetId);
+      state.checked = new Set(preset.checked);
+      state.preset = presetId;
+      render();
+    }
+
+    function toggleGate(gateId) {
+      if (state.checked.has(gateId)) {
+        state.checked.delete(gateId);
+      } else {
+        state.checked.add(gateId);
+      }
+      state.preset = "custom";
+      render();
+    }
+
+    function gateStatus(gate) {
+      return state.checked.has(gate.id) ? "complete" : gate.critical ? "blocked" : "partial";
+    }
+
+    function renderPresets() {
+      presetsEl.innerHTML = "";
+      presets.forEach((preset) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "preset" + (state.preset === preset.id ? " active" : "");
+        button.textContent = preset.label;
+        button.addEventListener("click", () => setPreset(preset.id));
+        presetsEl.appendChild(button);
+      });
+    }
+
+    function renderChecks() {
+      checksEl.innerHTML = "";
+      gates.forEach((gate) => {
+        const label = document.createElement("label");
+        label.className = "check";
+        const input = document.createElement("input");
+        input.type = "checkbox";
+        input.checked = state.checked.has(gate.id);
+        input.addEventListener("change", () => toggleGate(gate.id));
+        const text = document.createElement("span");
+        text.innerHTML = `<strong>${gate.title}</strong><span>${gate.detail}</span>`;
+        label.append(input, text);
+        checksEl.appendChild(label);
+      });
+    }
+
+    function renderStatus() {
+      const complete = gates.filter((gate) => state.checked.has(gate.id)).length;
+      const percent = Math.round((complete / gates.length) * 100);
+      const criticalOpen = gates.filter((gate) => gate.critical && !state.checked.has(gate.id));
+      const docsOpen = gates.filter((gate) => !gate.critical && !state.checked.has(gate.id));
+
+      meterEl.style.width = `${percent}%`;
+      scoreTextEl.textContent = `${complete} of ${gates.length} gates complete.`;
+      blockerTextEl.textContent = criticalOpen.length
+        ? `Release blocked by ${criticalOpen.length} critical gate(s): ${criticalOpen.map((gate) => gate.title).join(", ")}.`
+        : docsOpen.length
+          ? "Critical gates are closed; finish OSS/docs compatibility before public release."
+          : "All gates selected. Verify with commands before publish.";
+
+      statusPillsEl.innerHTML = "";
+      const pills = [
+        { label: "GitHub: PRIVATE as of 2026-06-06", tone: criticalOpen.length ? "warn" : "good" },
+        { label: "npm name: unclaimed as of 2026-06-06", tone: "good" },
+        { label: "Target: agnostic OSS CLI/MCP", tone: "good" },
+        { label: criticalOpen.length ? "Publish blocked" : "Candidate after verification", tone: criticalOpen.length ? "bad" : "good" }
+      ];
+      pills.forEach((pill) => {
+        const item = document.createElement("span");
+        item.className = `pill ${pill.tone}`;
+        item.textContent = pill.label;
+        statusPillsEl.appendChild(item);
+      });
+    }
+
+    function renderPhases() {
+      phaseGridEl.innerHTML = "";
+      phases.forEach((phase) => {
+        const phaseGates = gates.filter((gate) => gate.phase === phase.id);
+        const completeCount = phaseGates.filter((gate) => state.checked.has(gate.id)).length;
+        const hasCriticalOpen = phaseGates.some((gate) => gate.critical && !state.checked.has(gate.id));
+        const phaseState = completeCount === phaseGates.length ? "complete" : hasCriticalOpen ? "blocked" : "partial";
+        const card = document.createElement("article");
+        card.className = `phase ${phaseState}`;
+        card.style.borderLeftColor = phase.color;
+        card.innerHTML = `
+          <span class="tag">${phase.lane}</span>
+          <h3>${phase.id}. ${phase.title}</h3>
+          <p class="small">${completeCount}/${phaseGates.length} gate(s) selected</p>
+          <ul>
+            ${phaseGates.map((gate) => `<li>${gate.title}</li>`).join("")}
+          </ul>
+        `;
+        phaseGridEl.appendChild(card);
+      });
+    }
+
+    function renderPrompt() {
+      const open = gates.filter((gate) => !state.checked.has(gate.id));
+      const selected = gates.filter((gate) => state.checked.has(gate.id));
+      promptEl.value = [
+        "Use the ehukai-oss-standard, playground-architect, playground-lifecycle, and removing-regression-context skills.",
+        "",
+        "Goal: get google-webmaster-mcp ready for public GitHub OSS release and global npm publish.",
+        "",
+        "Required source artifacts:",
+        "- docs/specs/google-webmaster-mcp-oss-npm-publish-readiness.md",
+        "- docs/plans/google-webmaster-mcp-oss-npm-publish-readiness.md",
+        "- docs/playgrounds/specs/google-webmaster-mcp-oss-npm-publish.html",
+        "- docs/code-reviews/codex-google-webmaster-mcp-oss-audit-2026-06-06.md",
+        "- docs/code-reviews/claude-google-webmaster-mcp-oss-audit-verification-2026-06-06.md",
+        "",
+        "Current selected completed gates:",
+        selected.length ? selected.map((gate) => `- ${gate.title}`).join("\n") : "- None selected yet.",
+        "",
+        "Open gates to close next:",
+        open.map((gate) => `- ${gate.title}: ${gate.detail}`).join("\n"),
+        "",
+        "Non-negotiables:",
+        "- Treat committed state as truth, not dirty worktree state.",
+        "- Do not make GitHub public or run npm publish until credentials are rotated, history is purged, and npm pack is clean.",
+        "- Preserve stable public binaries until ehukaimedia_website operator references are migrated.",
+        "- Keep the package agnostic; no Ehukai-only runtime dependency or hardcoded GTM identifiers in public package surface."
+      ].join("\n");
+    }
+
+    function render() {
+      renderPresets();
+      renderChecks();
+      renderStatus();
+      renderPhases();
+      renderPrompt();
+    }
+
+    copyButton.addEventListener("click", async () => {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(promptEl.value);
+      } else {
+        promptEl.select();
+        document.execCommand("copy");
+      }
+      copyButton.textContent = "Copied";
+      window.setTimeout(() => {
+        copyButton.textContent = "Copy";
+      }, 1200);
+    });
+
+    render();
+  </script>
+</body>
+</html>
