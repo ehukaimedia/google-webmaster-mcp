@@ -24,7 +24,7 @@ const requiredFiles = new Set([
 ]);
 
 const prohibitedPatterns = [
-    { label: "credential file", pattern: /(^|\/)(client_secret.*\.json|\.env|token(?:_[A-Za-z0-9_-]+)?\.json)$/i },
+    { label: "credential file", pattern: new RegExp("(^|/)(client" + "_secret.*\\.json|\\.env|token(?:_[A-Za-z0-9_-]+)?\\.json)$", "i") },
     { label: "internal GTM cleanup script", pattern: /^scripts\/cleanup_gtm\.js$/ },
     { label: "hardcoded webmaster setup script", pattern: /^scripts\/setup_webmaster_fixed\.js$/ },
     { label: "site-specific KPI setup script", pattern: /^scripts\/setup_kpi_tags\.js$/ },

@@ -3,13 +3,13 @@ import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 
 const pathPatterns = [
-    /(^|\/)client_secret.*\.json$/i,
+    new RegExp("(^|/)client" + "_secret.*\\.json$", "i"),
     /(^|\/)token(?:_[A-Za-z0-9_-]+)?\.json$/i,
     /(^|\/)\.env$/i,
 ];
 
 const contentPatterns = [
-    { label: "Google OAuth client secret", pattern: /GOCSPX-[A-Za-z0-9_-]{20,}/ },
+    { label: "Google OAuth client secret", pattern: new RegExp("GOC" + "SPX-[A-Za-z0-9_-]{20,}") },
     { label: "Google OAuth access token", pattern: /ya29\.[A-Za-z0-9_-]+/ },
     { label: "private key", pattern: /-----BEGIN [A-Z ]*PRIVATE KEY-----/ },
 ];

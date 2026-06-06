@@ -8,6 +8,10 @@ Scope: independent verification and extension of the prior Codex audit
 claim from first-hand evidence, corrects what was wrong or under-scoped, and adds what was
 missed. **Audit only — no code or config was modified.**
 
+Archive note: this review records the pre-fix state. Retired credential identifiers have been
+redacted for publish hygiene, and later commits plus the 2026-06-06 reauthorization supersede the
+credential-status language below.
+
 ## Relationship to the Codex audit
 
 The Codex audit is good work: structure, severity ordering, and most findings hold up. I ran
@@ -43,12 +47,12 @@ correction to the prior audit.
 
 - **PR #1 contains only the audit markdown.** None of the local improvements — the `files`
   allowlist, the README edits, the `mcp-config.json` cleanup, the `.gitignore` line that ignores
-  `client_secret*.json` — are committed to any branch. They exist only as uncommitted worktree
+  retired credential JSON files are committed to any branch. They exist only as uncommitted worktree
   state and are lost the moment the tree is cleaned or cloned elsewhere.
 - **The Codex audit's line citations describe the worktree, not the repo.** For example it cites
-  `.gitignore:10` as "now ignores `client_secret*.json`" and `package.json:5-10` as "publishes
+	  `.gitignore:10` as "now ignores retired credential JSON files" and `package.json:5-10` as "publishes
   the entire `scripts` directory." Both are true of the dirty worktree only. On `HEAD` — the
-  state a reviewer actually clones — `.gitignore` does **not** mention `client_secret`, and
+	  state a reviewer actually clones — `.gitignore` does **not** mention retired credential JSON files, and
   `package.json` has **no `files` field at all**. So the prior audit does not reproduce against
   the committed repo. That mismatch is itself a finding.
 - **Consequence:** "fixes are in progress" is misleading. They are uncommitted. The release
@@ -56,7 +60,7 @@ correction to the prior audit.
 
 Evidence:
 ```
-git show HEAD:.gitignore        # -> no client_secret line
+git show HEAD:.gitignore        # -> no retired credential JSON ignore line
 git show HEAD:package.json      # -> "files" key absent
 git status                      # -> README/package.json/.gitignore/mcp-config.json modified, unstaged
 git show --stat 77c9f2a         # -> 1 file changed (the audit)
@@ -70,23 +74,22 @@ git show --stat 77c9f2a         # -> 1 file changed (the audit)
 
 Confidence: 100.
 
-Codex flagged one tracked `client_secret_*.json` and made history purge **conditional** ("if
+Codex flagged one tracked retired credential JSON file and made history purge **conditional** ("if
 this repo was ever pushed/shared"). Both halves need correction.
 
 Evidence (first-hand):
-- A full-history content scan (`git grep` across `git rev-list --all` for `GOCSPX-`,
-  `client_secret`, `refresh_token`, `-----BEGIN`, `AIza…`, `ya29.`, `AKIA…`,
+- A full-history content scan (`git grep` across `git rev-list --all` for common secret patterns,
   `GOOGLE_CLIENT_SECRET`) surfaces **two distinct real client-secret files**:
-  - `client_secret_REDACTED-…json` — added in `c00d402`. Project number `REDACTED`.
-  - `client_secret_2_REDACTED-…json` — present at `80c866d`, **still tracked at HEAD**
-    (`git ls-files` lists it). Project number `REDACTED`.
-  - Both parse as `{web:{client_secret:…}}` with a 35-char secret → both are real, and they are
+  - Retired OAuth credential JSON file A, added in `c00d402`.
+  - Retired OAuth credential JSON file B, present at `80c866d`, **still tracked at HEAD**
+    (`git ls-files` lists it).
+  - Both parse as Google OAuth client credential JSON with a 35-char secret -> both are real, and they are
     **different OAuth clients** (different project numbers ⇒ different secrets).
 - The repo is **private** but **already pushed**: the tracked secret is present on both
   `origin/main` and `origin/codex/oss-npm-publish-audit` (`git ls-tree -r origin/main`). Private
   ≠ unexposed — the credential has been transmitted to a third party (GitHub) and is one
   visibility flip away from public.
-- The historical `.env.example` hits in the scan are **placeholders** (`GOOGLE_CLIENT_SECRET=your_client_secret…`, 18 chars) — not real. `token.json` and `.env` were **never committed**
+- The historical `.env.example` hits in the scan are **placeholders**, not real. `token.json` and `.env` were **never committed**
   (confirmed clean in history). So the real-secret blast radius is exactly these two JSON files.
 
 Why it matters: violates the Ehukai OSS Standard "no secrets in the repo or its history" gate.
@@ -107,7 +110,7 @@ Evidence (first-hand, committed state via `git archive HEAD | tar -x` → `npm p
 - Committed `package.json` `files` field: **absent**. With no `files` and no `.npmignore`, npm
   falls back to `.gitignore`.
 - The committed tarball would contain **55 files including**
-  `client_secret_2_REDACTED-…json` (467 B) — **the live secret shipped to the public npm
+  one retired OAuth credential JSON file (467 B) — **credential material would have shipped to the public npm
   registry** — and **zero `dist/` entries** (`dist/` is gitignored), so the `bin` targets
   (`./dist/index.js`, `./dist/auth/cli.js`) would be missing and the package would be
   **non-functional**.
@@ -121,7 +124,7 @@ Why it matters: anyone running `npm publish` from the branch today leaks an OAut
 *and* ships a broken package. This subsumes and outranks Codex finding #6.
 
 Fix: commit a `files` allowlist (the worktree one is a good start); never rely on `.gitignore`
-for publish scoping; add a `prepublishOnly`/CI guard that fails if `client_secret*`, `.env`, or
+for publish scoping; add a `prepublishOnly`/CI guard that fails if credential JSON, `.env`, or
 `token.json` appear in `npm pack --dry-run`.
 
 ### C3 — Dependency audit fails high on axios; a quarantine-compliant fix already exists (CORRECTED)
@@ -218,9 +221,9 @@ this to `npx -y google-webmaster-mcp`, but — per the spine — that fix is unc
 ## Verification evidence (commands actually run, 2026-06-06)
 
 ```
-git ls-files | grep client_secret                         # 1 tracked secret at HEAD
+git ls-files | grep <retired credential pattern>          # 1 tracked secret at HEAD
 git grep -l -E '<secret patterns>' $(git rev-list --all)  # full-history scan: 2 real secret files
-git ls-tree -r origin/main | grep client_secret           # secret present on remote
+git ls-tree -r origin/main | grep <retired credential pattern>  # secret present on remote
 gh repo view … --json visibility                          # PRIVATE, already pushed
 git archive HEAD | tar -x -C tmp && (cd tmp && npm pack --dry-run)
                                                           # committed pack: 55 files, ships secret, 0 dist
@@ -242,14 +245,14 @@ committed pack ships the secret + omits dist · 2 real secrets in history, on th
 
 ## Corrected remediation order
 
-0. **Rotate/revoke in Google Cloud first** — both OAuth client secrets (`REDACTED` and
-   `REDACTED`) **and** the `token.json` refresh token. Nothing below un-leaks a credential
+0. **Rotate/revoke in Google Cloud first** — both OAuth client secrets and the local refresh token.
+   This was later reported complete by the operator. Nothing below un-leaks a credential
    already on GitHub; rotation is what actually closes the exposure.
 1. **Purge history once.** `git rm --cached` the tracked secret, rewrite history to remove both
-   `client_secret_*.json` files, force-push, add CI secret scanning. (Full-history scan already
+   retired credential JSON files, force-push, add CI secret scanning. (Full-history scan already
    done: scope is exactly those two files.)
 2. **Fix the publish surface.** Commit a `files` allowlist; add a `prepublishOnly`/CI guard that
-   fails if `client_secret*`/`.env`/`token.json` appear in `npm pack --dry-run`; confirm `dist/`
+   fails if credential JSON/`.env`/`token.json` appear in `npm pack --dry-run`; confirm `dist/`
    is present and `bin` targets resolve.
 3. **Resolve axios.** Pin `axios@1.16.1`; re-run `npm run audit:deps` to green; commit the lock.
 4. **Commit the in-flight worktree fixes** (README, `mcp-config.json`, `.gitignore`,
