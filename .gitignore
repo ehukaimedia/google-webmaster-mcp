@@ -9,3 +9,15 @@ dist/
 token.json
 token_*.json
 [c]lient_secret*.json
+
+# Local maintainer context. Keep on disk for development, but do not publish.
+.claude/
+.codex/
+.gemini/
+.local-archive/
+skills/
+docs/code-reviews/
+docs/handoffs/
+docs/plans/
+docs/playgrounds/
+docs/specs/

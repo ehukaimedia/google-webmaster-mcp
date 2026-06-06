@@ -28,10 +28,15 @@ const prohibitedPatterns = [
     { label: "internal GTM cleanup script", pattern: /^scripts\/cleanup_gtm\.js$/ },
     { label: "hardcoded webmaster setup script", pattern: /^scripts\/setup_webmaster_fixed\.js$/ },
     { label: "site-specific KPI setup script", pattern: /^scripts\/setup_kpi_tags\.js$/ },
-    { label: "private skills bundle", pattern: /^skills\// },
-    { label: "local Claude state", pattern: /^\.claude\// },
+    { label: "internal report/list script", pattern: /^scripts\/(kpi_report|list_ga4_structure|list_gtm_structure)\.js$/ },
+    { label: "one-off root maintenance script", pattern: /^(list_sites|list_versions)\.js$/ },
+    { label: "unverified examples", pattern: /^examples\// },
+    { label: "private skills bundle", pattern: /^(skills|\.gemini)\// },
+    { label: "local agent state", pattern: /^(\.claude|\.codex)\// },
+    { label: "local archive", pattern: /^\.local-archive\// },
     { label: "tests", pattern: /^test\// },
     { label: "review-only docs", pattern: /^docs\/code-reviews\// },
+    { label: "local maintainer docs", pattern: /^docs\/(handoffs|plans|specs)\// },
     { label: "playground drafts", pattern: /^docs\/playgrounds\// },
 ];
 

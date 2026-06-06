@@ -2,11 +2,12 @@
 
 ## Mandatory Spec-Driven Architecture
 
-- Specs live in `docs/specs/`.
-- Plans live in `docs/plans/`.
-- Handoffs live in `docs/handoffs/<agent><reference>-<date>.md`.
-- Code reviews and audits live in `docs/code-reviews/<agent>-<reference>-<date>.md`.
-- Architecture and spec playgrounds live under `docs/playgrounds/`.
+- Maintainer specs live locally in `docs/specs/`.
+- Maintainer plans live locally in `docs/plans/`.
+- Handoffs live locally in `docs/handoffs/<agent><reference>-<date>.md`.
+- Code reviews and audits live locally in `docs/code-reviews/<agent>-<reference>-<date>.md`.
+- Architecture and spec playgrounds live locally under `docs/playgrounds/`.
+- These maintainer artifacts are intentionally ignored by git for the public repo. Keep public-facing documentation in `README.md`, `SEO_AUDIT_CLI.md`, `GWMPC_Workflow.md`, `CONTRIBUTING.md`, `SECURITY.md`, and `CHANGELOG.md`.
 
 ## Required Skills
 

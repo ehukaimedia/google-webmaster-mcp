@@ -45,4 +45,4 @@ Keep PRs focused. Include:
 - Verification commands and results.
 - Any known limitations or follow-up work.
 
-Architecture/spec changes belong in `docs/specs/`, `docs/plans/`, and `docs/playgrounds/` according to the project workflow.
+Update public docs when behavior changes. Maintainer specs, plans, audits, and playgrounds may live locally under `docs/`, but those artifacts are intentionally ignored and are not required in public PRs.
