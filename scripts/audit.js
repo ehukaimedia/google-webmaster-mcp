@@ -1,12 +1,35 @@
 #!/usr/bin/env node
-import 'dotenv/config';
+import { config } from 'dotenv';
 import { GSCClient } from '../dist/gsc/client.js';
 import { AnalyticsClient } from '../dist/analytics/client.js';
 import { GTMManager } from '../dist/gtm/client.js';
+import { getPackageVersion, hasHelpFlag, hasVersionFlag, printVersion } from './cli-utils.mjs';
+
+config({ quiet: true });
 
 async function audit() {
     // Priority: Command Line Args > Environment Variables
     const args = process.argv.slice(2);
+
+    if (hasHelpFlag(args)) {
+        console.log(`Google Webmaster Audit ${getPackageVersion()}
+
+Usage:
+  google-webmaster-audit [GTM_ID] [GSC_SITE] [GA4_PROPERTY_ID]
+
+Reads missing values from GTM_ID, GSC_SITE, and GA4_PROPERTY_ID environment variables.
+
+Options:
+  --version, -v   Print the package version
+  --help, -h      Show this help message`);
+        return;
+    }
+
+    if (hasVersionFlag(args)) {
+        printVersion();
+        return;
+    }
+
     const gtmId = args[0] || process.env.GTM_ID;
     const siteUrl = args[1] || process.env.GSC_SITE;
     const ga4PropertyId = args[2] || process.env.GA4_PROPERTY_ID;

@@ -1,30 +1,38 @@
 #!/usr/bin/env node
+import { readFileSync } from 'node:fs';
 import { google } from 'googleapis';
 import * as http from 'http';
 import * as url from 'url';
 import { exec } from 'child_process';
 import { SCOPES, PORT, REDIRECT_URI } from './config.js';
-import { saveToken } from './auth.js';
-import 'dotenv/config';
+import { normalizeTokenProfile, saveToken } from './auth.js';
+
+const PACKAGE_VERSION = JSON.parse(readFileSync(new URL('../../package.json', import.meta.url), 'utf8')).version || '0.0.0';
 
 async function main() {
     const args = process.argv.slice(2);
 
     if (args.includes('--help') || args.includes('-h')) {
         console.log(`
-Google Webmaster MCP Auth CLI
+Google Webmaster MCP Auth CLI ${PACKAGE_VERSION}
 
 Usage:
-  npm run auth [options]
+  google-webmaster-mcp-auth [options]
 
 Options:
   --profile=<name>   Specify a profile name for the credentials (default: "default")
+  --version, -v      Print the package version
   --help, -h         Show this help message
 
 Examples:
-  npm run auth
-  npm run auth -- --profile=client_a
+  google-webmaster-mcp-auth
+  google-webmaster-mcp-auth --profile=client_a
         `);
+        process.exit(0);
+    }
+
+    if (args.includes('--version') || args.includes('-v')) {
+        console.log(PACKAGE_VERSION);
         process.exit(0);
     }
 
@@ -37,7 +45,7 @@ Examples:
     }
 
     const profileArg = args.find(arg => arg.startsWith('--profile='));
-    const profile = profileArg ? profileArg.split('=')[1] : 'default';
+    const profile = normalizeTokenProfile(profileArg ? profileArg.split('=')[1] : 'default');
 
     console.log(`\nInitializing authentication for profile: '${profile}'`);
 
@@ -68,11 +76,6 @@ Examples:
                 try {
                     const { tokens } = await oAuth2Client.getToken(code);
                     oAuth2Client.setCredentials(tokens);
-
-                    // Parse profile from command line args
-                    const args = process.argv.slice(2);
-                    const profileArg = args.find(arg => arg.startsWith('--profile='));
-                    const profile = profileArg ? profileArg.split('=')[1] : 'default';
 
                     saveToken(tokens, profile);
                     console.log('Setup complete.');

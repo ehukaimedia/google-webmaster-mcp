@@ -1,198 +1,147 @@
 # Google Webmaster MCP
 
-A Unified Model Context Protocol (MCP) server for managing **Google Tag Manager (GTM)**, **Google Search Console (GSC)**, and **Google Analytics (GA4)**.
+Local MCP server and CLI toolkit for Google Search Console, Google Tag Manager, GA4, sitemap, and SEO audit workflows.
 
-## Features
+`google-webmaster-mcp` is intended to be project-agnostic: bring your own Google OAuth credentials, Search Console property, GTM container, and GA4 property. It does not depend on Ehukai Media websites or services.
 
-### 🏷️ Google Tag Manager (GTM)
-- **List & Search**: Find tags, triggers, and variables.
-- **Manage Tags**: Create, update, pause, and delete tags.
-- **Validation**: Check for common issues.
+## What It Does
 
-### 🔍 Google Search Console (GSC)
-- **Site Management**: List properties.
-- **Performance**: Query analytics and inspect URLs.
-- **Sitemaps**: Submit and list sitemaps.
+- Runs an MCP stdio server with tools for GSC, GTM, and GA4.
+- Provides global CLI commands for audits, sitemap submission, GTM validation, GA4 setup, and GTM publishing.
+- Includes `seo-audit` for bounded technical SEO checks against a URL.
+- Stores OAuth tokens in the user config directory at `~/.config/google-webmaster-mcp/`.
 
-### 📊 Google Analytics (GA4)
-- **Reporting**: Run custom reports.
-- **Pulse**: Check active users and sessions.
+## Install
 
+### From a Cold Clone
 
+```bash
+git clone https://github.com/ehukaimedia/google-webmaster-mcp.git
+cd google-webmaster-mcp
+npm ci
+npm run build
+npm install -g .
+```
 
-## Installation
+### From npm
 
-1.  **Clone**:
-    ```bash
-    git clone <repository-url>
-    cd google-webmaster-mcp
-    ```
+After the first public npm release:
 
-2.  **Install & Build**:
-    ```bash
-    npm ci
-    npm run build
-    ```
+```bash
+npm install -g google-webmaster-mcp
+```
 
-3.  **Global Link (Required for CLI)**:
-    ```bash
-    npm install -g .
-    ```
+## Configure Authentication
 
-## Configuration
+Create an OAuth Desktop App in Google Cloud, then provide the client ID and secret through your environment or a local `.env` file:
 
-1.  **Google OAuth**:
-    -   Create Desktop App credentials in Google Cloud Console.
-    -   Save Client ID and Secret.
-
-4.  **Multi-Profile Support (Optional)**:
-    auth commands support a `--profile` flag to manage multiple accounts:
-    ```bash
-    npm run auth -- --profile=client_a
-    ```
-    To use a specific profile, set `GOOGLE_TOKEN_PROFILE=client_a` in your `.env` file or environment.
-
-5.  **Authenticate**:
-    ```bash
-    npm run auth
-    ```
-
-## Usage
-
-### 1. As an AI Agent Tool (MCP)
-Configure your AI client (Cursor, Claude, etc.) to use this server.
-- **Command**: `node /path/to/google-webmaster-mcp/dist/index.js`
-- **Env**: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
-
-**Workflow**:
-Your MCP host must inject `GTM_ID`, `GSC_SITE`, `GA4_PROPERTY_ID`, and related values into the server process. The server does not auto-read a project-local `.env` file for MCP requests.
-
-### 2. Global CLI Tool Suite
-You can run these tools from **any** directory on your machine.
-
-**Prerequisite**:
-Ensure you have a `.env` file in your **current working directory** with:
 ```env
-GTM_ID=GTM-XXXX
-GTM_WORKSPACE_ID=1234567
-GSC_SITE=https://example.com
+GOOGLE_CLIENT_ID=your_client_id
+GOOGLE_CLIENT_SECRET=your_client_secret
+```
+
+Authenticate once per Google account/profile:
+
+```bash
+google-webmaster-mcp-auth
+google-webmaster-mcp-auth --profile=client_a
+```
+
+To use a saved profile for CLI or MCP runs:
+
+```bash
+export GOOGLE_TOKEN_PROFILE=client_a
+```
+
+Token files are stored under `~/.config/google-webmaster-mcp/` with private file permissions.
+
+## Configure Project Context
+
+Run CLI commands from a project directory with these environment variables available:
+
+```env
+GTM_ID=GTM-XXXXXXX
+GSC_SITE=sc-domain:example.com
 GA4_PROPERTY_ID=123456789
 GA4_MID=G-XXXXXXXXXX
-
+GTM_WORKSPACE_ID=
+GOOGLE_WEBMASTER_MCP_API_KEY=
 ```
 
-`GTM_WORKSPACE_ID` is optional when the container has a single workspace. If the container has multiple workspaces, set it explicitly so GTM operations target the intended draft.
+`GA4_PROPERTY_ID` is the numeric GA4 property ID. `GA4_MID` is the `G-` measurement ID. `GTM_WORKSPACE_ID` is optional unless the container has multiple workspaces.
 
-**Available Commands**:
+## MCP Client Config
 
-#### 🔍 Audit
-Checks GTM tags, GSC performance, and GA4 traffic.
+Use `npx` for portable MCP client registration:
+
+```json
+{
+  "mcpServers": {
+    "google-webmaster": {
+      "command": "npx",
+      "args": ["-y", "google-webmaster-mcp"]
+    }
+  }
+}
+```
+
+The MCP server starts over stdio. Use `google-webmaster-mcp --help` or `google-webmaster-mcp --version` for CLI metadata; run without flags only from an MCP-compatible client.
+
+## CLI Commands
+
+```bash
+google-webmaster-audit [GTM_ID] [GSC_SITE] [GA4_PROPERTY_ID]
+google-webmaster-submit-sitemap [GSC_SITE] [SITEMAP_URL]
+google-webmaster-gtm-validate [GTM_ID]
+google-webmaster-setup-ga4 [GTM_ID] [GA4_MID]
+google-webmaster-gtm-publish [GTM_ID] [VERSION_NOTES]
+seo-audit <url> [--ai] [--pagespeed]
+seo-audit --file urls.txt [--ai] [--pagespeed]
+seo-audit-smart "audit localhost with AI"
+```
+
+All public commands support `--help` and `--version`.
+
+## GTM Rate-Limit Safety
+
+The GTM API has strict per-user quotas. Wait at least 3 minutes between GTM commands such as validate, setup, and publish. After a 429, stop and wait 3-5 minutes before one retry.
+
+Safe sequence:
+
 ```bash
 google-webmaster-audit
-```
-
-#### 🗺️ Submit Sitemap
-Submits your sitemap to Google Search Console.
-```bash
-# Auto-detects sitemap from GSC_SITE/sitemap.xml
-google-webmaster-submit-sitemap
-
-# Or specify manually
-google-webmaster-submit-sitemap https://example.com https://example.com/custom-sitemap.xml
-```
-
-#### ✅ Validate GTM
-Checks your GTM workspace for missing triggers, unknown variables, and GA4 config issues.
-```bash
+# wait 3 minutes
 google-webmaster-gtm-validate
-```
-
-#### 🚀 Publish GTM
-Creates a new version and publishes the current GTM workspace.
-```bash
-# Publish with default notes
-google-webmaster-gtm-publish
-
-# Publish with custom notes
-google-webmaster-gtm-publish GTM-XXXX "Updated GA4 tags"
-```
-
-#### 📈 Setup GA4 Tags
-Automatically creates GA4 Configuration and Event tags (contact_click, generate_lead) in GTM.
-```bash
-# Requires GTM_ID and GA4_MID in .env
+# wait 3 minutes
 google-webmaster-setup-ga4
-```
-
-
-#### 🎯 Setup KPI Tags
-Automatically creates conversion tracking tags for key performance indicators in GTM.
-```bash
-# Requires GTM_ID and GA4_MID in .env
-node scripts/setup_kpi_tags.js
-```
-
----
-
-### 🔍 SEO/GEO Audit CLI
-
-A full 25-check technical audit tool that works on any URL (public or localhost).
-
-#### Standard Mode (Flags)
-```bash
-# Basic audit
-seo-audit https://example.com
-
-# With AI recommendations (requires: ollama serve)
-seo-audit http://localhost:3000 --ai
-
-# With PageSpeed score (public URLs only)
-seo-audit https://example.com --pagespeed
-
-# Batch mode (multiple URLs from file)
-seo-audit --file urls.txt
-```
-
-#### Smart Mode (Natural Language)
-```bash
-seo-audit-smart "audit localhost with AI"
-seo-audit-smart "check example.com performance"
-```
-
-**Checks Include:**
-- SEO (10): Title, Meta, H1, Alt Text, Canonical, OG Tags, etc.
-- GEO (4): Schema.org, FAQ, Citation Signals, Content Clarity
-- Security (5): HTTPS, CSP, HSTS, X-Frame-Options
-- Accessibility (4): Lang, Labels, Skip Nav, Focus
-- Mobile (2): Touch Targets, Font Legibility
-- Speed (1): PageSpeed Insights (optional)
-
-**Output:** JSON to stdout (pipe to file or parse with jq).
-
-
-
-## Troubleshooting
-
-### "Error: Missing configuration"
-If you see this error, it means the tool cannot find your `.env` file.
-1.  Make sure you are running the command from the **root of your project**.
-2.  Make sure a `.env` file exists in that directory.
-3.  Make sure the `.env` file contains the required keys (`GTM_ID`, `GSC_SITE`, etc.).
-
-### "command not found"
-If you cannot run `google-webmaster-audit`, try reinstalling the package globally:
-```bash
-cd /path/to/google-webmaster-mcp
-npm install -g .
+# wait 3 minutes
+google-webmaster-gtm-validate
+# wait 3 minutes
+google-webmaster-gtm-publish
 ```
 
 ## Development
 
-For local verification:
 ```bash
+npm ci
+npm run build
 npm test
 npm run audit:deps
+npm run secrets:check
+npm run pack:check
+npm run smoke:tarball
 ```
 
+Full local release gate:
+
+```bash
+npm run ci
+```
+
+## Security
+
+Do not commit OAuth client secrets, `.env` files, or token files. See `SECURITY.md` for vulnerability reporting.
+
 ## License
+
 ISC

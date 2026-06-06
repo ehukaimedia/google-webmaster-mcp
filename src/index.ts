@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { readFileSync } from 'node:fs';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import {
@@ -10,10 +11,12 @@ import { GSC_REGISTRY } from './gsc/tools.js';
 import { ANALYTICS_REGISTRY } from './analytics/tools.js';
 import { combineToolRegistries, textResult } from './mcp/tool-registry.js';
 
+const PACKAGE_VERSION = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')).version || '0.0.0';
+
 const server = new Server(
     {
         name: 'google-webmaster-mcp',
-        version: '1.0.0',
+        version: PACKAGE_VERSION,
     },
     {
         capabilities: {
@@ -21,6 +24,43 @@ const server = new Server(
         },
     }
 );
+
+function printHelp() {
+    console.log(`Google Webmaster MCP ${PACKAGE_VERSION}
+
+Usage:
+  google-webmaster-mcp [--help] [--version]
+
+Starts the Google Webmaster MCP server over stdio for MCP-compatible clients.
+
+Options:
+  --help, -h       Show this help message
+  --version, -v    Print the package version
+
+MCP client example:
+  {
+    "mcpServers": {
+      "google-webmaster": {
+        "command": "npx",
+        "args": ["-y", "google-webmaster-mcp"]
+      }
+    }
+  }`);
+}
+
+function handledCliFlag(args: string[]) {
+    if (args.includes('--help') || args.includes('-h')) {
+        printHelp();
+        return true;
+    }
+
+    if (args.includes('--version') || args.includes('-v')) {
+        console.log(PACKAGE_VERSION);
+        return true;
+    }
+
+    return false;
+}
 
 const TOOL_REGISTRY = combineToolRegistries(
     GTM_REGISTRY,
@@ -46,6 +86,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 });
 
 async function main() {
+    if (handledCliFlag(process.argv.slice(2))) {
+        return;
+    }
+
     const transport = new StdioServerTransport();
     await server.connect(transport);
     console.error('Google Webmaster MCP server running on stdio');

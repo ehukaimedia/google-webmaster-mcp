@@ -1,9 +1,32 @@
 #!/usr/bin/env node
-import 'dotenv/config';
+import { config } from 'dotenv';
 import { setupGa4Command } from '../dist/gtm/commands.js';
+import { getPackageVersion, hasHelpFlag, hasVersionFlag, printVersion } from './cli-utils.mjs';
+
+config({ quiet: true });
 
 async function setup() {
     const args = process.argv.slice(2);
+
+    if (hasHelpFlag(args)) {
+        console.log(`Google Webmaster Setup GA4 ${getPackageVersion()}
+
+Usage:
+  google-webmaster-setup-ga4 [GTM_ID] [GA4_MID]
+
+Reads GTM_ID and GA4_MID from the environment when omitted.
+
+Options:
+  --version, -v   Print the package version
+  --help, -h      Show this help message`);
+        return;
+    }
+
+    if (hasVersionFlag(args)) {
+        printVersion();
+        return;
+    }
+
     const gtmId = args[0] || process.env.GTM_ID;
     const measurementId = args[1] || process.env.GA4_MID;
 

@@ -1,146 +1,142 @@
-# Google Webmaster MCP: SEO & KPI Maintenance Workflow
+# Google Webmaster MCP Workflow
 
-This document outlines the recommended Standard Operating Procedure (SOP) for using the **Google Webmaster MCP** tool to maintain robust SEO health and track Key Performance Indicators (KPIs).
+This workflow is the standard operating path for maintaining SEO, Search Console, GA4, and GTM health with the globally installed `google-webmaster-mcp` CLI tools.
 
-## The "Triple-A" Cycle: Audit, Analyze, Action
+## Prerequisites
 
-The most effective workflow combines the three pillars of the tool: **Google Search Console (Audit)**, **Google Analytics 4 (Analyze)**, and **Google Tag Manager (Action)**.
+Run commands from the project you are auditing, not from the MCP package repo, unless you are developing the package itself.
 
----
+Create a project-local `.env` or export equivalent environment variables:
 
-## Prerequisites for Global Use
+```env
+GTM_ID=GTM-XXXXXXX
+GSC_SITE=sc-domain:example.com
+GA4_PROPERTY_ID=123456789
+GA4_MID=G-XXXXXXXXXX
+GTM_WORKSPACE_ID=
+```
 
-Since this tool is installed globally, it needs to know **which** project you are working on.
+Authenticate globally before using Google APIs:
 
-1.  **Context is Key**: The tools need to know which site to act on.
-    *   **Create a `.env` file** in the **root of your project** (e.g., inside `your-app-name/`).
-    *   **Required Variables**:
-        ```env
-        GTM_ID=GTM-XXXXXX
-        GSC_SITE=https://example.com
-        GSC_SITE=https://example.com
-        GA4_PROPERTY_ID=123456789
+```bash
+google-webmaster-mcp-auth
+```
 
-        ```
+## Phase 1: Audit
 
-2.  **Authentication**: Ensure you have authenticated globally using the command:
-    ```bash
-    google-webmaster-mcp-auth
-    ```
+Goal: confirm the site is visible, indexed, and connected to the expected Google properties.
 
----
+```bash
+google-webmaster-audit
+```
 
-### Phase 1: Audit (Google Search Console)
-**Goal**: Ensure your site is visible, indexed, and error-free.
+Check for:
 
-1.  **Health Check**:
-    *   Run `google-webmaster-audit` to get a snapshot of GSC performance and sitemap status.
-    *   If sitemaps are missing, run `google-webmaster-submit-sitemap`.
-2.  **Indexing Status**:
-    *   Use `gsc_inspect_url` (via MCP) on key landing pages.
-3.  **Performance Review**:
-    *   Review the "Top Pages" output from the audit command.
+- Missing or stale sitemap submissions.
+- Unexpected zero-click or zero-impression Search Console data.
+- GA4 "No data returned" results.
+- Empty or drifted GTM containers.
 
-### Phase 2: Analyze (Google Analytics 4)
-**Goal**: Understand user behavior and verify KPI performance.
+For `sc-domain:` Search Console properties, submit sitemaps explicitly:
 
-1.  **Traffic Pulse**:
-    *   Run `google-webmaster-audit` to see the last 7 days of active users and sessions.
-2.  **KPI Verification**:
-    *   Check specific conversion events using the MCP tool `analytics_run_report`.
+```bash
+google-webmaster-submit-sitemap "sc-domain:example.com" "https://example.com/sitemap.xml"
+```
 
-### Phase 3: Action (Google Tag Manager)
-**Goal**: Automated Tracking & Implementation.
+## Phase 2: Analyze
 
-1.  **Automate Baseline**:
-    *   Run `google-webmaster-setup-ga4` to automatically provision the **Universal Baseline**:
-        *   **Universal Lead Trigger**: Listens for the `generate_lead` event.
-        *   **Standard Tags**: Lead Gen, Email Clicks, Phone Clicks, LinkedIn views.
-2.  **Validation**:
-    *   Run `google-webmaster-gtm-validate` to check for missing triggers or variables.
-3.  **Deployment**:
-    *   Run `google-webmaster-gtm-publish` to snapshot and publish your changes.
+Goal: understand whether traffic and events match the expected site behavior.
 
+Use the MCP tool `analytics_run_report` for custom GA4 checks. Useful dimensions include `sessionSourceMedium`, `eventName`, and `eventLabel`. Useful metrics include `sessions`, `engagementRate`, and `eventCount`.
 
-### Phase 5: Conversion Optimization (KPI Strategy)
-**Goal**: Track and optimize key performance indicators using a tiered approach.
+## Phase 3: Validate GTM
 
-1.  **Tier 1: The Universal Baseline (All Sites)**
-    *   **Logic**: Every site must track `generate_lead`.
-    *   **How**: Just call `window.dataLayer.push({ event: 'generate_lead' })` in your code. The automation handles the rest.
-    
-2.  **Tier 2: Custom KPIs (Site-Specific)**
-    *   **Logic**: Unique features like "3D Model Rotated" or "Tutorial Completed".
-    *   **How**: These require manual GTM setup or custom scripts *on top* of the baseline.
+Goal: inspect the workspace before changing it.
 
-3.  **Performance Monitoring**:
-    *   Review KPI metrics in GA4 with `analytics_run_report`.
+```bash
+google-webmaster-gtm-validate
+```
 
-### Phase 6: Advanced "Smart Analysis" Setup
-**Goal**: Move beyond "Total Leads" to "Leads by Source" (e.g., Hero Button vs. Footer Link) without creating hundreds of tags.
+Do this before setup or publish so partial state and drift are visible.
 
-1.  **Codebase Strategy (The "Label" Pattern)**:
-    *   Push a single generic event name (e.g., `generate_lead`) but add a specific unique `label`.
-    *   *Example*: `dataLayer.push({ event: 'generate_lead', label: 'header_quote_button' })`
-    *   *Example*: `dataLayer.push({ event: 'generate_lead', label: 'hero_quote_button' })`
+## Phase 4: Set Up Baseline GA4 Tracking
 
-2.  **GTM Configuration (The "Dynamic Variable" Pattern)**:
-    *   **The Trap**: Standard Tags often ignore custom properties like `label`.
-    *   **The Fix**:
-        1.  **Create Variable**: Go to Variables -> User-Defined -> New -> **Data Layer Variable**. Name it `DLV - label`. Set Data Layer Variable Name to `label`.
-        2.  **Update Tag**: Open your `GA4 Event - Generate Lead` tag.
-        3.  **Map Parameter**: In "Event Parameters", add:
-            *   Parameter Name: `event_label`
-            *   Value: `{{DLV - label}}`
-    
-3.  **Result**:
-    *   **Execs see**: "50 Leads" (Generalization).
-    *   **Marketers see**: "30 from Hero, 20 from Header" (Granularity).
+Goal: provision the generic baseline tracking contract.
 
-### Phase 7: Advanced Troubleshooting (GSC & Schema)
-**Goal**: systematically resolve "Rich Result" or "Indexing" errors reported by Search Console.
+```bash
+google-webmaster-setup-ga4
+```
 
-1.  **Diagnosis**:
-    *   **Identify**: Use `google-webmaster-audit` to list active GSC errors.
-    *   **Inspect**: Use `gsc_inspect_url` on a failing URL to get the specific error details.
-    *   **Isolate**: effective debugging requires checking both *Code* and *Tag Manager*.
-        *   *Code Check*: Does your source code (e.g., `layout.tsx`, `app.vue`, or `index.html`) have valid `JsonLd`?
-        *   *GTM Check*: Are there "Custom HTML" tags injecting conflicting schema? (Common root cause for "Multiple Aggregate Ratings").
+This creates or reuses:
 
-2.  **Resolution**:
-    *   **Fix**: Update the code or Delete the conflicting GTM tag.
-    *   **Verify**: Publish GTM container (if changed). Deploy code.
-    *   **Validate**: In GSC, click "Validate Fix" to trigger a recrawl.
+- GA4 configuration on all pages.
+- `generate_lead` custom-event trigger and event tag.
+- Standard email, phone, and LinkedIn interaction tracking where supported.
 
-### Phase 8: Deep-Dive Analytics (Traffic Quality)
-**Goal**: Go beyond "Hits" to understand "Value".
+Keep `generate_lead` generic. Site-specific attribution belongs in event parameters such as `label`, not in hardcoded package defaults.
 
-1.  **Traffic Quality Report**:
-    *   Use `analytics_run_report` with dimensions `sessionSourceMedium` and metrics `sessions, engagementRate`.
-    *   **Analysis**:
-        *   *High Volume / Low Engagement*: Bot traffic or bad targeting.
-        *   *Low Volume / High Engagement*: **Gold Mine**. Scale this channel (e.g., SEO, Yelp).
-    
-2.  **Conversion Attribution**:
-    *   Use `analytics_run_report` with dimensions `eventName, eventLabel` and metrics `eventCount`.
-    *   **Analysis**: Identify which specific buttons (Labels) are driving the leads.
+## Phase 5: Validate and Publish
 
----
+Goal: confirm workspace state after setup, then publish deliberately.
 
-## Example Scenarios
+```bash
+google-webmaster-gtm-validate
+google-webmaster-gtm-publish GTM-XXXXXXX "Add GA4 baseline tags"
+```
 
-### Scenario A: "My traffic dropped!"
-1.  **Agent**: "Check GSC analytics for the last 7 days. Are impressions down or just clicks?"
-2.  **Agent**: "If impressions are stable but clicks are down, check average position."
-3.  **Agent**: "Inspect the top dropping URL with `gsc_inspect_url` to see if it was de-indexed."
+## GTM Rate-Limit Rules
 
-### Scenario B: "I need to track a new marketing campaign."
-1.  **Agent**: "Create a new GA4 Event Tag named 'Campaign_Signup' in GTM."
-2.  **Agent**: "Create a Trigger for 'Page View' where URL contains '/campaign-landing'."
-3.  **Agent**: "Publish the new version."
-4.  **Agent**: "Verify data starts appearing in GA4 with `analytics_run_report` tomorrow."
+The GTM API enforces a low queries-per-minute quota. Each CLI command can make several API calls, and retrying too quickly can exhaust the quota.
 
-## Automation Tips for AI Agents
+Hard rules:
 
-*   **Batch Audits**: Ask your agent to "Audit the top 5 pages of my site using GSC and report any mobile usability issues."
-*   **Self-Healing**: "If you find a broken variable reference in GTM using `gtm_validate_workspace`, list it and suggest a fix."
+- Wait at least 3 minutes between GTM commands.
+- Do not run audit, validate, setup, and publish back-to-back.
+- Do not use polling loops to retry GTM commands.
+- After a 429, stop completely and wait 3-5 minutes before one retry.
+- If setup fails midway, wait, then run validate before retrying setup.
+
+Safe sequence:
+
+```bash
+google-webmaster-audit
+# wait 3 minutes
+google-webmaster-gtm-validate
+# wait 3 minutes
+google-webmaster-setup-ga4
+# wait 3 minutes
+google-webmaster-gtm-validate
+# wait 3 minutes
+google-webmaster-gtm-publish
+```
+
+## Conversion Attribution Pattern
+
+Use one generic conversion event and add labels for source attribution:
+
+```js
+window.dataLayer.push({ event: 'generate_lead', label: 'header_cta' });
+window.dataLayer.push({ event: 'generate_lead', label: 'hero_quote_button' });
+```
+
+In GTM, create a Data Layer Variable for `label` and map it to the GA4 event parameter `event_label`.
+
+## Troubleshooting Scenarios
+
+Traffic dropped:
+
+- Compare impressions and clicks in GSC.
+- Inspect top affected URLs with `gsc_inspect_url`.
+- Check whether GA4 sessions dropped at the same time.
+
+New campaign:
+
+- Use a site-owned GTM plan for campaign-specific events.
+- Keep generic package commands focused on reusable baseline tracking.
+- Publish only after validation passes.
+
+Broken GTM workspace:
+
+- Run `google-webmaster-gtm-validate`.
+- Fix missing triggers, variables, or GA4 config references.
+- Validate again before publish.

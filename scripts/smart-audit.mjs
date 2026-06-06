@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Ehukai Smart Audit - Natural Language CLI
+ * Smart Audit - Natural Language CLI
  * 
  * Uses FunctionGemma to interpret natural language queries
  * and route them to the appropriate audit-cli.mjs flags.
@@ -17,8 +17,24 @@
 import { spawn } from "child_process";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
+import { getPackageVersion, hasHelpFlag, hasVersionFlag, printVersion } from "./cli-utils.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+
+function printHelp() {
+    console.log(`SEO Smart Audit CLI ${getPackageVersion()}
+
+Usage:
+  seo-audit-smart "audit request"
+
+Options:
+  --version, -v   Print the package version
+  --help, -h      Show this help message
+
+Examples:
+  seo-audit-smart "audit localhost with AI"
+  seo-audit-smart "check example.com performance"`);
+}
 
 // --- FunctionGemma Parser ---
 async function parseQuery(query) {
@@ -28,9 +44,9 @@ Output ONLY this exact format:
 {"url": "...", "ai": true/false, "pagespeed": true/false}
 
 Examples:
-- "audit localhost" → {"url": "http://localhost:3000", "ai": false, "pagespeed": false}
-- "check example.com with AI" → {"url": "https://example.com", "ai": true, "pagespeed": false}
-- "full audit of mysite.com" → {"url": "https://mysite.com", "ai": true, "pagespeed": true}
+- "audit localhost" -> {"url": "http://localhost:3000", "ai": false, "pagespeed": false}
+- "check example.com with AI" -> {"url": "https://example.com", "ai": true, "pagespeed": false}
+- "full audit of mysite.com" -> {"url": "https://mysite.com", "ai": true, "pagespeed": true}
 
 Rules:
 - If no protocol, add https:// (or http:// for localhost)
@@ -132,7 +148,19 @@ function runAudit(url, flags = [], batchFile = null) {
 
 // --- Main ---
 async function main() {
-    const query = process.argv.slice(2).join(" ");
+    const args = process.argv.slice(2);
+
+    if (hasHelpFlag(args)) {
+        printHelp();
+        return;
+    }
+
+    if (hasVersionFlag(args)) {
+        printVersion();
+        return;
+    }
+
+    const query = args.join(" ");
 
     if (!query) {
         console.error(JSON.stringify({
@@ -147,9 +175,9 @@ async function main() {
     }
 
     // Step 1: Parse query with FunctionGemma
-    console.error(`🧠 Parsing: "${query}"...`);
+    console.error(`Parsing: "${query}"...`);
     const parsed = await parseQuery(query);
-    console.error(`📋 Interpreted: ${JSON.stringify(parsed)}`);
+    console.error(`Interpreted: ${JSON.stringify(parsed)}`);
 
     // Step 2: Run audit
     try {

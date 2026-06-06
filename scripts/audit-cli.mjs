@@ -23,9 +23,91 @@
 import * as cheerio from "cheerio";
 import { config } from "dotenv";
 import { readFileSync } from "fs";
+import { getPackageVersion, hasHelpFlag, hasVersionFlag, printVersion } from "./cli-utils.mjs";
 
 // Load .env file for API keys
-config({ path: new URL("../.env", import.meta.url).pathname });
+config({ path: new URL("../.env", import.meta.url).pathname, quiet: true });
+
+const DEFAULT_FETCH_TIMEOUT_MS = 10_000;
+const MAX_HTML_BYTES = 2 * 1024 * 1024;
+const ACCEPTED_HTML_TYPES = [
+    "text/html",
+    "application/xhtml+xml",
+];
+
+function printHelp() {
+    console.log(`SEO Audit CLI ${getPackageVersion()}
+
+Usage:
+  seo-audit <url> [--ai] [--pagespeed]
+  seo-audit --file <urls.txt> [--ai] [--pagespeed]
+
+Options:
+  --ai            Include Ollama AI recommendations
+  --pagespeed     Include Google PageSpeed score
+  --file <path>   Audit one URL per line from a file
+  --version, -v   Print the package version
+  --help, -h      Show this help message
+
+Output:
+  JSON to stdout`);
+}
+
+function createFetchTimeout(timeoutMs) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    timer.unref?.();
+    return {
+        signal: controller.signal,
+        clear: () => clearTimeout(timer),
+    };
+}
+
+function assertHtmlResponse(response) {
+    const contentType = response.headers.get("content-type")?.split(";")[0]?.trim().toLowerCase();
+    if (contentType && !ACCEPTED_HTML_TYPES.includes(contentType)) {
+        response.body?.cancel().catch(() => {});
+        throw new Error(`Unsupported content type: ${contentType}`);
+    }
+
+    const contentLength = Number(response.headers.get("content-length"));
+    if (Number.isFinite(contentLength) && contentLength > MAX_HTML_BYTES) {
+        response.body?.cancel().catch(() => {});
+        throw new Error(`Response too large: ${contentLength} bytes`);
+    }
+}
+
+async function readResponseTextWithLimit(response, maxBytes = MAX_HTML_BYTES) {
+    if (!response.body?.getReader) {
+        const text = await response.text();
+        if (Buffer.byteLength(text, "utf8") > maxBytes) {
+            throw new Error(`Response exceeded ${maxBytes} bytes`);
+        }
+        return text;
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let totalBytes = 0;
+    let text = "";
+
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) {
+            break;
+        }
+
+        totalBytes += value.byteLength;
+        if (totalBytes > maxBytes) {
+            reader.cancel().catch(() => {});
+            throw new Error(`Response exceeded ${maxBytes} bytes`);
+        }
+
+        text += decoder.decode(value, { stream: true });
+    }
+
+    return text + decoder.decode();
+}
 
 // --- Audit a single URL ---
 async function auditUrl(urlString, options = {}) {
@@ -44,12 +126,19 @@ async function auditUrl(urlString, options = {}) {
 
     try {
         // Fetch the page
-        const response = await fetch(targetUrl.toString(), {
-            headers: {
-                "User-Agent": "EhukaiAuditCLI/1.0",
-                "Accept": "text/html,application/xhtml+xml",
-            },
-        });
+        const fetchTimeout = createFetchTimeout(DEFAULT_FETCH_TIMEOUT_MS);
+        let response;
+        try {
+            response = await fetch(targetUrl.toString(), {
+                signal: fetchTimeout.signal,
+                headers: {
+                    "User-Agent": `google-webmaster-mcp/${getPackageVersion()} seo-audit`,
+                    "Accept": "text/html,application/xhtml+xml",
+                },
+            });
+        } finally {
+            fetchTimeout.clear();
+        }
 
         if (!response.ok) {
             return {
@@ -58,7 +147,8 @@ async function auditUrl(urlString, options = {}) {
             };
         }
 
-        const html = await response.text();
+        assertHtmlResponse(response);
+        const html = await readResponseTextWithLimit(response);
         const $ = cheerio.load(html);
         const responseHeaders = response.headers;
 
@@ -502,6 +592,17 @@ async function auditUrl(urlString, options = {}) {
 // --- Main ---
 async function main() {
     const args = process.argv.slice(2);
+
+    if (hasHelpFlag(args)) {
+        printHelp();
+        return;
+    }
+
+    if (hasVersionFlag(args)) {
+        printVersion();
+        return;
+    }
+
     const includeAI = args.includes("--ai");
     const includePageSpeed = args.includes("--pagespeed");
 

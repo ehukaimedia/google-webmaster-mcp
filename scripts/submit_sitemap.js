@@ -1,9 +1,32 @@
 #!/usr/bin/env node
-import 'dotenv/config';
+import { config } from 'dotenv';
 import { GSCClient } from '../dist/gsc/client.js';
+import { getPackageVersion, hasHelpFlag, hasVersionFlag, printVersion } from './cli-utils.mjs';
+
+config({ quiet: true });
 
 async function submit() {
     const args = process.argv.slice(2);
+
+    if (hasHelpFlag(args)) {
+        console.log(`Google Webmaster Submit Sitemap ${getPackageVersion()}
+
+Usage:
+  google-webmaster-submit-sitemap [GSC_SITE] [SITEMAP_URL]
+
+Reads GSC_SITE from the environment when omitted.
+
+Options:
+  --version, -v   Print the package version
+  --help, -h      Show this help message`);
+        return;
+    }
+
+    if (hasVersionFlag(args)) {
+        printVersion();
+        return;
+    }
+
     const siteUrl = args[0] || process.env.GSC_SITE;
     const sitemapUrl = args[1] || (siteUrl ? `${siteUrl}/sitemap.xml` : undefined);
 

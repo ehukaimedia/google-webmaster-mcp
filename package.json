@@ -1,7 +1,23 @@
 {
   "name": "google-webmaster-mcp",
   "version": "1.0.0",
+  "description": "Local MCP server and CLI toolkit for Google Search Console, Tag Manager, GA4, sitemap, and SEO audit workflows.",
   "type": "module",
+  "files": [
+    "dist",
+    "scripts/audit.js",
+    "scripts/audit-cli.mjs",
+    "scripts/cli-utils.mjs",
+    "scripts/publish_gtm.js",
+    "scripts/setup_ga4_tags.js",
+    "scripts/smart-audit.mjs",
+    "scripts/submit_sitemap.js",
+    "scripts/validate_gtm.js",
+    "README.md",
+    "SEO_AUDIT_CLI.md",
+    "GWMPC_Workflow.md",
+    "mcp-config.json"
+  ],
   "bin": {
     "google-webmaster-mcp": "./dist/index.js",
     "google-webmaster-mcp-auth": "./dist/auth/cli.js",
@@ -21,32 +37,54 @@
     "auth": "node dist/auth/cli.js",
     "audit": "node scripts/audit.js",
     "audit:deps": "npm audit --audit-level=high",
+    "secrets:check": "node scripts/check-secrets.mjs",
     "check": "npm test && npm run audit:deps",
     "sitemap": "node scripts/submit_sitemap.js",
     "validate": "node scripts/validate_gtm.js",
     "publish": "node scripts/publish_gtm.js",
     "setup-ga4": "node scripts/setup_ga4_tags.js",
+    "ci": "npm run build && npm test && npm run audit:deps && npm run secrets:check && npm run pack:check && npm run smoke:tarball",
+    "pack:check": "node scripts/check-package-surface.mjs",
+    "smoke:tarball": "node scripts/smoke-tarball.mjs",
+    "prepublishOnly": "npm run ci",
     "pretest": "npm run build",
     "test": "node --test"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "mcp",
+    "google-search-console",
+    "google-tag-manager",
+    "ga4",
+    "seo",
+    "sitemap"
+  ],
+  "author": "Ehukai Media",
   "license": "ISC",
-  "description": "",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ehukaimedia/google-webmaster-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ehukaimedia/google-webmaster-mcp/issues"
+  },
+  "homepage": "https://github.com/ehukaimedia/google-webmaster-mcp#readme",
+  "engines": {
+    "node": ">=20"
+  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.29.0",
     "ajv": "8.18.0",
-    "axios": "1.15.2",
-    "cheerio": "^1.2.0",
-    "dotenv": "^17.2.3",
+    "axios": "1.16.1",
+    "cheerio": "1.2.0",
+    "dotenv": "17.2.3",
     "fast-xml-parser": "5.7.1",
     "google-auth-library": "10.6.2",
-    "googleapis": "^166.0.0",
-    "typescript": "^5.9.3",
-    "zod": "^4.1.13"
+    "googleapis": "166.0.0",
+    "typescript": "5.9.3",
+    "zod": "4.1.13"
   },
   "devDependencies": {
-    "@types/node": "^24.10.1",
-    "ts-node": "^10.9.2"
+    "@types/node": "24.10.1",
+    "ts-node": "10.9.2"
   }
 }

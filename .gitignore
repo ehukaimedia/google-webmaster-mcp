@@ -7,3 +7,5 @@ dist/
 
 ._*
 token.json
+token_*.json
+client_secret*.json
