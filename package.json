@@ -16,7 +16,8 @@
     "README.md",
     "SEO_AUDIT_CLI.md",
     "GWMPC_Workflow.md",
-    "mcp-config.json"
+    "mcp-config.json",
+    "skills/google-webmaster-mcp/SKILL.md"
   ],
   "bin": {
     "google-webmaster-mcp": "./dist/index.js",

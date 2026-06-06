@@ -21,6 +21,7 @@ const requiredFiles = new Set([
     "scripts/smart-audit.mjs",
     "scripts/submit_sitemap.js",
     "scripts/validate_gtm.js",
+    "skills/google-webmaster-mcp/SKILL.md",
 ]);
 
 const prohibitedPatterns = [
@@ -31,7 +32,8 @@ const prohibitedPatterns = [
     { label: "internal report/list script", pattern: /^scripts\/(kpi_report|list_ga4_structure|list_gtm_structure)\.js$/ },
     { label: "one-off root maintenance script", pattern: /^(list_sites|list_versions)\.js$/ },
     { label: "unverified examples", pattern: /^examples\// },
-    { label: "private skills bundle", pattern: /^(skills|\.gemini)\// },
+    { label: "private skills bundle", pattern: /^skills\/(?!google-webmaster-mcp\/SKILL\.md$)/ },
+    { label: "local Gemini context", pattern: /^\.gemini\// },
     { label: "local agent state", pattern: /^(\.claude|\.codex)\// },
     { label: "local archive", pattern: /^\.local-archive\// },
     { label: "tests", pattern: /^test\// },

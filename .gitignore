@@ -15,7 +15,9 @@ token_*.json
 .codex/
 .gemini/
 .local-archive/
-skills/
+skills/*
+!skills/google-webmaster-mcp/
+!skills/google-webmaster-mcp/SKILL.md
 docs/code-reviews/
 docs/handoffs/
 docs/plans/

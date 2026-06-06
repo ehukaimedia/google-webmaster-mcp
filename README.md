@@ -87,6 +87,16 @@ Use `npx` for portable MCP client registration:
 
 The MCP server starts over stdio. Use `google-webmaster-mcp --help` or `google-webmaster-mcp --version` for CLI metadata; run without flags only from an MCP-compatible client.
 
+## AI Assistant Skill
+
+This repo includes an agnostic Codex-style skill for assistants that operate Google Webmaster MCP:
+
+```text
+skills/google-webmaster-mcp/SKILL.md
+```
+
+The skill documents safe authentication, read-only checks, GTM rate limits, and confirmation points without relying on any Ehukai Media-specific project.
+
 ## CLI Commands
 
 ```bash
