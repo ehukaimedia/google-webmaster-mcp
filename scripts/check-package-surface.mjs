@@ -52,12 +52,12 @@ function packDryRun() {
         stdio: ["ignore", "pipe", "pipe"],
     });
     const [packInfo] = JSON.parse(output);
-    return packInfo.files.map((file) => normalizePath(file.path));
+    return packInfo.files.map((file) => ({ ...file, path: normalizePath(file.path) }));
 }
 
 function main() {
     const files = packDryRun();
-    const fileSet = new Set(files);
+    const fileSet = new Set(files.map((file) => file.path));
     const failures = [];
 
     for (const requiredFile of requiredFiles) {
@@ -68,15 +68,18 @@ function main() {
 
     for (const [binName, binPath] of Object.entries(manifest.bin || {})) {
         const normalizedBinPath = binPath.replace(/^\.\//, "");
-        if (!fileSet.has(normalizedBinPath)) {
+        const packedFile = files.find((file) => file.path === normalizedBinPath);
+        if (!packedFile) {
             failures.push(`Missing bin target for ${binName}: ${normalizedBinPath}`);
+        } else if ((packedFile.mode & 0o111) === 0) {
+            failures.push(`Bin target is not executable in package for ${binName}: ${normalizedBinPath}`);
         }
     }
 
     for (const file of files) {
         for (const { label, pattern } of prohibitedPatterns) {
-            if (pattern.test(file)) {
-                failures.push(`Package includes prohibited ${label}: ${file}`);
+            if (pattern.test(file.path)) {
+                failures.push(`Package includes prohibited ${label}: ${file.path}`);
             }
         }
     }
