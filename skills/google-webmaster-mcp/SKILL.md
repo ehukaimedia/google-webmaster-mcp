@@ -6,7 +6,9 @@ description: |
 
 # Google Webmaster MCP
 
-Use this skill to operate the agnostic `google-webmaster-mcp` MCP server and CLI toolkit. The package works with any user's Google OAuth client, Search Console property, Tag Manager container, and GA4 property. It does not require Ehukai Media infrastructure.
+Use this skill to operate the agnostic `google-webmaster-mcp` MCP server and CLI toolkit. The package works with any user's Google OAuth client, Search Console property, Tag Manager container, and GA4 property. It does not require any specific organization's infrastructure.
+
+> **No-auth quick win:** `seo-audit <url>` runs a bounded technical + GEO audit with **no Google OAuth** — use it for per-page checks anytime, including before auth is configured or when GSC/GA4/GTM access is unavailable. Only the GSC/GA4/GTM operations need the OAuth in the Authentication section.
 
 ## Safety Rules
 
@@ -18,7 +20,7 @@ Use this skill to operate the agnostic `google-webmaster-mcp` MCP server and CLI
 
 ## Authentication
 
-The package reads OAuth credentials from the current shell or a local `.env`:
+The package reads OAuth credentials from the current shell or the **current working directory's** `.env` — so the secret must be current in whatever directory you run the CLI from (a stale `.env` in one project is a common cause of `invalid_client`):
 
 ```env
 GOOGLE_CLIENT_ID=
@@ -122,7 +124,8 @@ Map `label` to the GA4 `event_label` parameter in GTM when attribution detail is
 | Symptom | Likely Cause | Fix |
 | --- | --- | --- |
 | Missing config | `.env` lacks OAuth or project values | Add values locally; do not commit secrets |
-| Auth error | Token expired or wrong profile | Re-run auth or set `GOOGLE_TOKEN_PROFILE` |
+| `invalid_client` / "provided client secret is invalid" | `.env` `GOOGLE_CLIENT_SECRET` is stale or no longer matches the OAuth client (e.g. rotated/regenerated in Cloud Console) | Update `GOOGLE_CLIENT_SECRET` to the current value, then re-auth. Diagnostic: if browser consent succeeds (an auth code is returned) but the **token exchange** fails, it is the secret, not consent — re-running auth alone will not fix it |
+| Auth error (expired token / wrong profile) | Access or refresh token expired, or wrong profile | Re-run `google-webmaster-mcp-auth` or set `GOOGLE_TOKEN_PROFILE` |
 | No GA4 rows | New property, no data, or wrong numeric ID | Verify `GA4_PROPERTY_ID` and GA4 Realtime |
 | Sitemap error with `sc-domain:` | Inferred URL is wrong | Pass explicit site and sitemap URL |
 | GTM 429 | Rate limit | Stop, wait 3-5 minutes, retry once |
