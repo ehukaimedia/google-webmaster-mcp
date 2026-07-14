@@ -1,5 +1,7 @@
 # Google Webmaster MCP
 
+[![npm version](https://img.shields.io/npm/v/google-webmaster-mcp.svg)](https://www.npmjs.com/package/google-webmaster-mcp)
+
 Local MCP server and CLI toolkit for Google Search Console, Google Tag Manager, GA4, sitemap, and SEO audit workflows.
 
 `google-webmaster-mcp` is intended to be project-agnostic: bring your own Google OAuth credentials, Search Console property, GTM container, and GA4 property. It does not depend on Ehukai Media websites or services.
@@ -13,7 +15,13 @@ Local MCP server and CLI toolkit for Google Search Console, Google Tag Manager, 
 
 ## Install
 
-### From a Cold Clone
+### From npm
+
+```bash
+npm install -g google-webmaster-mcp
+```
+
+### From Source (Local Development)
 
 ```bash
 git clone https://github.com/ehukaimedia/google-webmaster-mcp.git
@@ -21,14 +29,6 @@ cd google-webmaster-mcp
 npm ci
 npm run build
 npm install -g .
-```
-
-### From npm
-
-After the first public npm release:
-
-```bash
-npm install -g google-webmaster-mcp
 ```
 
 ## Configure Authentication
