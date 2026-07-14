@@ -9,12 +9,17 @@ import { fileURLToPath } from "node:url";
 const manifest = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
 const root = resolve(fileURLToPath(new URL("..", import.meta.url)));
 
+const cleanEnv = Object.fromEntries(
+    Object.entries(process.env).filter(([key]) => !key.startsWith("npm_"))
+);
+
 function run(command, args, options = {}) {
     execFileSync(command, args, {
         cwd: root,
         stdio: options.stdio || "pipe",
         encoding: "utf8",
         timeout: options.timeout || 30_000,
+        env: cleanEnv,
     });
 }
 
@@ -42,6 +47,7 @@ function runBin(prefix, name, args) {
         stdio: "pipe",
         encoding: "utf8",
         timeout: 5_000,
+        env: cleanEnv,
     });
 }
 
@@ -50,6 +56,7 @@ function assertMcpServerStarts(prefix) {
         const child = spawn(assertBin(prefix, "google-webmaster-mcp"), [], {
             cwd: root,
             stdio: ["pipe", "pipe", "pipe"],
+            env: cleanEnv,
         });
 
         let stderr = "";
@@ -101,6 +108,7 @@ async function main() {
             encoding: "utf8",
             stdio: ["ignore", "pipe", "pipe"],
             timeout: 30_000,
+            env: cleanEnv,
         });
         const [packInfo] = JSON.parse(packOutput);
         tarball = resolve(root, packInfo.filename);
