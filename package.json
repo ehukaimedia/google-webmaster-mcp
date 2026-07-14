@@ -42,7 +42,7 @@
     "check": "npm test && npm run audit:deps",
     "sitemap": "node scripts/submit_sitemap.js",
     "validate": "node scripts/validate_gtm.js",
-    "publish": "node scripts/publish_gtm.js",
+    "gtm:publish": "node scripts/publish_gtm.js",
     "setup-ga4": "node scripts/setup_ga4_tags.js",
     "ci": "npm run build && npm test && npm run audit:deps && npm run secrets:check && npm run pack:check && npm run smoke:tarball",
     "pack:check": "node scripts/check-package-surface.mjs",
