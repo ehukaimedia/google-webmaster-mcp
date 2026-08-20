@@ -31,6 +31,11 @@ const withSilencedLogs = (fn: () => void) => {
 
 withSilencedLogs(() => dotenv.config());
 
+const cwdEnvLocal = path.resolve(process.cwd(), '.env.local');
+if (fs.existsSync(cwdEnvLocal)) {
+    withSilencedLogs(() => dotenv.config({ path: cwdEnvLocal }));
+}
+
 const packageEnvPath = path.join(PACKAGE_ROOT, '.env');
 if (fs.existsSync(packageEnvPath)) {
     withSilencedLogs(() => dotenv.config({ path: packageEnvPath }));
