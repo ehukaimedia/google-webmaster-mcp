@@ -2,10 +2,12 @@ import { google } from 'googleapis';
 import { OAuth2Client } from 'google-auth-library';
 import * as fs from 'fs';
 import * as path from 'path';
+import { fileURLToPath } from 'node:url';
 import { SCOPES, REDIRECT_URI } from './config.js';
 import * as dotenv from 'dotenv';
 import * as os from 'os';
 
+const PACKAGE_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const CONFIG_DIR = path.join(os.homedir(), '.config', 'google-webmaster-mcp');
 if (!fs.existsSync(CONFIG_DIR)) {
     fs.mkdirSync(CONFIG_DIR, { recursive: true, mode: 0o700 });
@@ -29,7 +31,11 @@ const withSilencedLogs = (fn: () => void) => {
 
 withSilencedLogs(() => dotenv.config());
 
-// Load .env from config dir if it exists
+const packageEnvPath = path.join(PACKAGE_ROOT, '.env');
+if (fs.existsSync(packageEnvPath)) {
+    withSilencedLogs(() => dotenv.config({ path: packageEnvPath }));
+}
+
 const globalEnvPath = path.join(CONFIG_DIR, '.env');
 if (fs.existsSync(globalEnvPath)) {
     withSilencedLogs(() => dotenv.config({ path: globalEnvPath }));
