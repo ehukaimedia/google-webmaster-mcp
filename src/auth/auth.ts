@@ -3,7 +3,7 @@ import { OAuth2Client } from 'google-auth-library';
 import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'node:url';
-import { SCOPES, REDIRECT_URI } from './config.js';
+import { REDIRECT_URI } from './config.js';
 import * as dotenv from 'dotenv';
 import * as os from 'os';
 

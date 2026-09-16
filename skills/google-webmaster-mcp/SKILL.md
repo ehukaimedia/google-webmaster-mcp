@@ -1,7 +1,7 @@
 ---
 name: google-webmaster-mcp
 description: |
-  Use this skill when working with the google-webmaster-mcp package, MCP server, or CLI tools for Google Search Console, Google Tag Manager, Google Analytics 4, sitemap submission, and technical SEO audits. Trigger on google-webmaster-mcp, google-webmaster-audit, google-webmaster-mcp-auth, google-webmaster-submit-sitemap, google-webmaster-gtm-validate, google-webmaster-setup-ga4, google-webmaster-gtm-publish, seo-audit, GTM_ID, GSC_SITE, GA4_PROPERTY_ID, GA4_MID, Google Search Console, GTM, GA4, sitemap indexing, analytics setup, or SEO audit workflows.
+  Use this skill when working with the google-webmaster-mcp package, MCP server, or CLI tools for Google Search Console, Google Tag Manager, Google Analytics 4, sitemap submission, and technical SEO audits. Trigger on google-webmaster-mcp, google-webmaster-audit, google-webmaster-mcp-auth, google-webmaster-submit-sitemap, google-webmaster-gtm-validate, google-webmaster-setup-ga4, google-webmaster-gtm-publish, seo-audit, GTM_ID, GSC_SITE, GA4_PROPERTY_ID, GA4_MID, GBP_ENABLED, Google Search Console, GTM, GA4, Google Business Profile, sitemap indexing, analytics setup, or SEO audit workflows.
 ---
 
 # Google Webmaster MCP
@@ -14,7 +14,8 @@ Use this skill to operate the agnostic `google-webmaster-mcp` MCP server and CLI
 
 - Do not print OAuth client secrets, token JSON, API keys, or `.env` contents.
 - Prefer read-only checks before setup or publish actions.
-- Ask for explicit confirmation before GTM writes, GTM publish, sitemap submission, or any operation that changes Google-side state.
+- Ask for explicit confirmation before GTM writes, GTM publish, sitemap submission, GBP listing edits, review replies, local posts, or any operation that changes Google-side state.
+- Leave `GBP_ENABLED` unset/false until Google approves Business Profile API access (quota 300 QPM). Do not enable the switch while quota is 0.
 - After a GTM `429 RESOURCE_EXHAUSTED`, stop and wait 3-5 minutes before one retry.
 - Keep project-specific IDs in local environment variables, not in repo files.
 
@@ -48,9 +49,12 @@ GA4_PROPERTY_ID=123456789
 GA4_MID=G-XXXXXXXXXX
 GTM_WORKSPACE_ID=
 GOOGLE_WEBMASTER_MCP_API_KEY=
+GBP_ENABLED=false
 ```
 
 `GA4_PROPERTY_ID` is numeric. `GA4_MID` is the `G-` measurement ID.
+
+Google Business Profile tools are **off by default**. Do not set `GBP_ENABLED=true` until Google has approved GBP API access for the Cloud project. After that, re-run auth with the flag on so the token includes `business.manage`. Ask for confirmation before any GBP write.
 
 ## Read-Only Connection Check
 
@@ -68,6 +72,7 @@ For live Google API connectivity, use the package clients or MCP tools to check:
 - GSC: list accessible sites and confirm `GSC_SITE` is present.
 - GA4: list account summaries and run a tiny report against `GA4_PROPERTY_ID`.
 - GTM: list accounts/containers and confirm `GTM_ID` is found.
+- GBP: only if `GBP_ENABLED=true` and access is approved; list accounts and report counts only.
 
 Report counts and pass/fail status only.
 
@@ -129,3 +134,5 @@ Map `label` to the GA4 `event_label` parameter in GTM when attribution detail is
 | No GA4 rows | New property, no data, or wrong numeric ID | Verify `GA4_PROPERTY_ID` and GA4 Realtime |
 | Sitemap error with `sc-domain:` | Inferred URL is wrong | Pass explicit site and sitemap URL |
 | GTM 429 | Rate limit | Stop, wait 3-5 minutes, retry once |
+| GBP tools missing | `GBP_ENABLED` is unset or false (default) | Leave off until quota is approved; then set `GBP_ENABLED=true` and re-auth |
+| GBP quota / 0 QPM | Cloud project not approved for Business Profile APIs | Leave the switch off; wait for Google access approval |

@@ -10,6 +10,7 @@ This project follows Keep a Changelog and Semantic Versioning.
 
 - Release-readiness gates for package surface, secret scanning, tarball smoke tests, and CLI ergonomics.
 - Public OSS health files and contribution/security guidance.
+- Optional Google Business Profile MCP tools (`gbp_*`), off unless `GBP_ENABLED=true`.
 
 ### Changed
 
@@ -19,6 +20,8 @@ This project follows Keep a Changelog and Semantic Versioning.
 ### Security
 
 - Added current-tree secret scanning and private token-file permission requirements.
+- Google Business Profile tools and the `business.manage` OAuth scope stay behind `GBP_ENABLED` (default off) until API access is approved.
+- Upgraded axios, ajv, undici, fast-uri, and ip-address to clear high-severity npm audit findings.
 
 ## [1.0.0] - 2026-06-06
 

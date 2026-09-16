@@ -4,7 +4,7 @@ import { google } from 'googleapis';
 import * as http from 'http';
 import * as url from 'url';
 import { exec } from 'child_process';
-import { SCOPES, PORT, REDIRECT_URI } from './config.js';
+import { getScopes, PORT, REDIRECT_URI } from './config.js';
 import { normalizeTokenProfile, saveToken } from './auth.js';
 
 const PACKAGE_VERSION = JSON.parse(readFileSync(new URL('../../package.json', import.meta.url), 'utf8')).version || '0.0.0';
@@ -23,6 +23,9 @@ Options:
   --profile=<name>   Specify a profile name for the credentials (default: "default")
   --version, -v      Print the package version
   --help, -h         Show this help message
+
+Set GBP_ENABLED=true before auth to include the Business Profile scope.
+Leave it unset (default off) until Google approves GBP API access.
 
 Examples:
   google-webmaster-mcp-auth
@@ -53,7 +56,7 @@ Examples:
 
     const authUrl = oAuth2Client.generateAuthUrl({
         access_type: 'offline',
-        scope: SCOPES,
+        scope: getScopes(),
         prompt: 'consent', // Force consent to ensure we get a refresh token
     });
 

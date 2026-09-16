@@ -8,7 +8,7 @@ Local MCP server and CLI toolkit for Google Search Console, Google Tag Manager, 
 
 ## What It Does
 
-- Runs an MCP stdio server with tools for GSC, GTM, and GA4.
+- Runs an MCP stdio server with tools for GSC, GTM, and GA4. Google Business Profile tools are optional and off by default.
 - Provides global CLI commands for audits, sitemap submission, GTM validation, GA4 setup, and GTM publishing.
 - Includes `seo-audit` for bounded technical SEO checks against a URL.
 - Stores OAuth tokens in the user config directory at `~/.config/google-webmaster-mcp/`.
@@ -69,6 +69,42 @@ GOOGLE_WEBMASTER_MCP_API_KEY=
 ```
 
 `GA4_PROPERTY_ID` is the numeric GA4 property ID. `GA4_MID` is the `G-` measurement ID. `GTM_WORKSPACE_ID` is optional unless the container has multiple workspaces.
+
+## Google Business Profile (off by default)
+
+GBP tools stay hidden until Google approves Business Profile API access for the Cloud project (quota 300 QPM, not 0). Leave the switch off until then:
+
+```env
+GBP_ENABLED=false
+```
+
+After approval, turn it on and re-auth so the token includes `business.manage`:
+
+```env
+GBP_ENABLED=true
+GBP_ACCOUNT_ID=
+GBP_LOCATION_ID=
+```
+
+```bash
+GBP_ENABLED=true google-webmaster-mcp-auth --profile=client_a
+```
+
+MCP client example with the switch on:
+
+```json
+{
+  "mcpServers": {
+    "google-webmaster": {
+      "command": "npx",
+      "args": ["-y", "google-webmaster-mcp"],
+      "env": {
+        "GBP_ENABLED": "true"
+      }
+    }
+  }
+}
+```
 
 ## MCP Client Config
 
