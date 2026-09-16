@@ -6,10 +6,8 @@ import {
     ListToolsRequestSchema,
     CallToolRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
-import { GTM_REGISTRY } from './gtm/tools.js';
-import { GSC_REGISTRY } from './gsc/tools.js';
-import { ANALYTICS_REGISTRY } from './analytics/tools.js';
-import { combineToolRegistries, textResult } from './mcp/tool-registry.js';
+import { textResult } from './mcp/tool-registry.js';
+import { createPackageToolRegistry } from './mcp/package-tools.js';
 
 const PACKAGE_VERSION = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')).version || '0.0.0';
 
@@ -62,11 +60,7 @@ function handledCliFlag(args: string[]) {
     return false;
 }
 
-const TOOL_REGISTRY = combineToolRegistries(
-    GTM_REGISTRY,
-    GSC_REGISTRY,
-    ANALYTICS_REGISTRY,
-);
+const TOOL_REGISTRY = createPackageToolRegistry();
 
 // Handle tool listing
 server.setRequestHandler(ListToolsRequestSchema, async () => ({
